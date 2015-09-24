@@ -43,7 +43,7 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
 
             let start = try!(pdf.tell());
             try!(write!(pdf.output, "/DeviceRGB cs /DeviceRGB CS\n"));
-            try!(write!(pdf.output, "0.75 0 0 -0.75 0 {} cm\n", height));
+            try!(write!(pdf.output, "1 0 0 -1 0 {} cm\n", height));
             try!(render_contents(&mut Canvas { output: pdf.output }));
             let end = try!(pdf.tell());
 
