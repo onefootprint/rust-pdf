@@ -1,5 +1,6 @@
 use std::io::{Seek, SeekFrom, Write, self};
 
+use std::f32::consts::SQRT_2;
 
 pub struct Pdf<'a, W: 'a + Write + Seek> {
     output: &'a mut W,
@@ -135,8 +136,34 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
 impl<'a, W: Write> Canvas<'a, W> {
     pub fn rectangle(&mut self, r: u8, g: u8, b: u8, x: f32, y: f32, width: f32, height: f32)
                      -> io::Result<()> {
-        write!(self.output, "{} {} {} sc {} {} {} {} re f\n",
+        write!(self.output, "{} {} {} sc {} {} {} {} re s\n",
                r, g, b,
                x, y, width, height)
+    }
+    pub fn line(&mut self, x1: f32, y1: f32, x2: f32, y2: f32) -> io::Result<()> {
+        write!(self.output, "{} {} m {} {} l s\n", x1, y1, x2, y2)
+    }
+    pub fn move_to(&mut self, x: f32, y: f32) -> io::Result<()> {
+        write!(self.output, "{} {} m ", x, y)
+    }
+    pub fn line_to(&mut self, x: f32, y: f32) -> io::Result<()> {
+        write!(self.output, "{} {} l ", x, y)
+    }
+    pub fn circle(&mut self, x: f32, y: f32, r: f32) -> io::Result<()> {
+        // not actually a proper cirlce, but a silly aproximation.
+        let t = y - r;
+        let b = y + r;
+        let l = x - r * SQRT_2;
+        let r = x + r * SQRT_2;
+        write!(self.output, "{} {} m {} {} {} {} {} {} c {} {} {} {} {} {} c ",
+               x, t,
+               l, t, l, b, x, b,
+               r, b, r, t, x, t)
+    }
+    pub fn stroke(&mut self) -> io::Result<()> {
+        write!(self.output, "s\n")
+    }
+    pub fn fill(&mut self) -> io::Result<()> {
+        write!(self.output, "f\n")
     }
 }
