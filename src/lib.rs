@@ -10,6 +10,10 @@ pub struct Canvas<'a, W: 'a + Write> {
     output: &'a mut W,
 }
 
+pub struct TextObject<'a, W: 'a + Write> {
+    output: &'a mut W,
+}
+
 const ROOT_OBJECT_ID: usize = 1;
 const PAGES_OBJECT_ID: usize = 2;
 
@@ -52,10 +56,17 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
             assert!(length_object_id == contents_object_id + 1);
             write!(pdf.output, "{}\n", content_length)
         }));
+        let font_object_id =
+            try!(self.write_new_object(|font_object_id, pdf| {
+                try!(write!(pdf.output, "<< /Type /Font /Subtype /Type1"));
+                try!(write!(pdf.output, "   /BaseFont /Helvetica >>"));
+                Ok(font_object_id)
+            }));
         let page_object_id = try!(self.write_new_object(|page_object_id, pdf| {
             try!(write!(pdf.output, "<<  /Type /Page\n"));
             try!(write!(pdf.output, "    /Parent {} 0 R\n", PAGES_OBJECT_ID));
-            try!(write!(pdf.output, "    /Resources << >>\n"));
+            // FIXME Actually manage fonts!
+            try!(write!(pdf.output, "    /Resources << /Font << /F1 {} 0 R >> >>\n", font_object_id));
             try!(write!(pdf.output, "    /MediaBox [ 0 0 {} {} ]\n", width, height));
             try!(write!(pdf.output, "    /Contents {} 0 R\n", contents_object_id));
             try!(write!(pdf.output, ">>\n"));
@@ -131,11 +142,9 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
 }
 
 impl<'a, W: Write> Canvas<'a, W> {
-    pub fn rectangle(&mut self, r: u8, g: u8, b: u8, x: f32, y: f32, width: f32, height: f32)
+    pub fn rectangle(&mut self, x: f32, y: f32, width: f32, height: f32)
                      -> io::Result<()> {
-        write!(self.output, "{} {} {} sc {} {} {} {} re s\n",
-               r, g, b,
-               x, y, width, height)
+        write!(self.output, "{} {} {} {} re\n", x, y, width, height)
     }
     /// Set the line width in the graphics state
     pub fn set_line_width(&mut self, w: f32) -> io::Result<()> {
@@ -188,5 +197,30 @@ impl<'a, W: Write> Canvas<'a, W> {
     }
     pub fn fill(&mut self) -> io::Result<()> {
         write!(self.output, "f\n")
+    }
+    pub fn text<F>(&mut self, render_text: F) -> io::Result<()>
+        where F: FnOnce(&mut TextObject<W>) -> io::Result<()> {
+            try!(write!(self.output, "BT\n"));
+            try!(render_text(&mut TextObject { output: self.output }));
+            write!(self.output, "ET\n")
+    }
+}
+
+impl<'a, W: Write> TextObject<'a, W> {
+    /// TODO Get the font name and make a resource properly
+    pub fn set_font(&mut self, size: f32) -> io::Result<()> {
+        write!(self.output, "/F1 {} Tf\n", size)
+    }
+    pub fn set_leading(&mut self, leading: f32) -> io::Result<()> {
+        write!(self.output, "{} TL\n", leading)
+    }
+    pub fn pos(&mut self, x: f32, y: f32) -> io::Result<()> {
+        write!(self.output, "{} {} Td\n", x, y)
+    }
+    pub fn show(&mut self, text: &str) -> io::Result<()> {
+        write!(self.output, "({}) Tj\n", text)
+    }
+    pub fn show_line(&mut self, text: &str) -> io::Result<()> {
+        write!(self.output, "({}) '\n", text)
     }
 }
