@@ -138,13 +138,19 @@ impl<'a, W: Write> Canvas<'a, W> {
                r, g, b,
                x, y, width, height)
     }
+    /// Set the line width in the graphics state
+    pub fn set_line_width(&mut self, w: f32) -> io::Result<()> {
+        write!(self.output, "{} w\n", w)
+    }
     /// Set rgb color for stroking operations
     pub fn set_stroke_color(&mut self, r: u8, g: u8, b: u8) -> io::Result<()> {
-        write!(self.output, "{} {} {} SC\n", r, g, b)
+        let norm = |c| { c as f32 / 255.0 };
+        write!(self.output, "{} {} {} SC\n", norm(r), norm(g), norm(b))
     }
     /// Set rgb color for non-stroking operations
     pub fn set_fill_color(&mut self, r: u8, g: u8, b: u8) -> io::Result<()> {
-        write!(self.output, "{} {} {} sc\n", r, g, b)
+        let norm = |c| { c as f32 / 255.0 };
+        write!(self.output, "{} {} {} sc\n", norm(r), norm(g), norm(b))
     }
     pub fn line(&mut self, x1: f32, y1: f32, x2: f32, y2: f32) -> io::Result<()> {
         write!(self.output, "{} {} m {} {} l s\n", x1, y1, x2, y2)
@@ -154,6 +160,10 @@ impl<'a, W: Write> Canvas<'a, W> {
     }
     pub fn line_to(&mut self, x: f32, y: f32) -> io::Result<()> {
         write!(self.output, "{} {} l ", x, y)
+    }
+    pub fn arc_to(&mut self, x1: f32, y1: f32, x2: f32, y2: f32, x3: f32, y3: f32)
+                  -> io::Result<()> {
+        write!(self.output, "{} {} {} {} {} {} c\n", x1, y1, x2, y2, x3, y3)
     }
     /// A circle approximated by four cubic Bézier curves.
     /// Based on http://spencermortensen.com/articles/bezier-circle/
@@ -167,12 +177,12 @@ impl<'a, W: Write> Canvas<'a, W> {
         let rightp = x + (r * c);
         let tp = y - (r * c);
         let bp = y + (r * c);
-        write!(self.output, "{} {} m {} {} {} {} {} {} c {} {} {} {} {} {} c {} {} {} {} {} {} c {} {} {} {} {} {} c\n",
-               x, t,
-               leftp, t, left, tp, left, y,
-               left, bp, leftp, b, x, b,
-               rightp, b, right, bp, right, y,
-               right, tp, rightp, t, x, t)
+        try!(self.move_to(x, t));
+        try!(self.arc_to(leftp, t, left, tp, left, y));
+        try!(self.arc_to(left, bp, leftp, b, x, b));
+        try!(self.arc_to(rightp, b, right, bp, right, y));
+        try!(self.arc_to(right, tp, rightp, t, x, t));
+        Ok(())
     }
     pub fn stroke(&mut self) -> io::Result<()> {
         write!(self.output, "s\n")

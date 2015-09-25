@@ -10,11 +10,11 @@ fn main() {
     document.render_page(400.0, 400.0, |c| {
         let (x, y) = (200.0, 200.0);
         let r = 190.0;
-        try!(c.set_stroke_color(255, 0, 0));
+        try!(c.set_stroke_color(0, 0, 0));
         try!(c.circle(x, y, r+0.5));
         try!(c.circle(x, y, r-0.5));
         try!(c.stroke());
-        try!(c.set_stroke_color(0, 0, 0));
+        try!(c.set_stroke_color(255, 230, 150));
         try!(c.move_to(x + r, y));
         let sides = 200;
         for n in 1..sides {
