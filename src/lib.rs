@@ -1,7 +1,5 @@
 use std::io::{Seek, SeekFrom, Write, self};
 
-use std::f32::consts::SQRT_2;
-
 pub struct Pdf<'a, W: 'a + Write + Seek> {
     output: &'a mut W,
     object_offsets: Vec<i64>,
@@ -140,6 +138,14 @@ impl<'a, W: Write> Canvas<'a, W> {
                r, g, b,
                x, y, width, height)
     }
+    /// Set rgb color for stroking operations
+    pub fn set_stroke_color(&mut self, r: u8, g: u8, b: u8) -> io::Result<()> {
+        write!(self.output, "{} {} {} SC\n", r, g, b)
+    }
+    /// Set rgb color for non-stroking operations
+    pub fn set_fill_color(&mut self, r: u8, g: u8, b: u8) -> io::Result<()> {
+        write!(self.output, "{} {} {} sc\n", r, g, b)
+    }
     pub fn line(&mut self, x1: f32, y1: f32, x2: f32, y2: f32) -> io::Result<()> {
         write!(self.output, "{} {} m {} {} l s\n", x1, y1, x2, y2)
     }
@@ -149,16 +155,24 @@ impl<'a, W: Write> Canvas<'a, W> {
     pub fn line_to(&mut self, x: f32, y: f32) -> io::Result<()> {
         write!(self.output, "{} {} l ", x, y)
     }
+    /// A circle approximated by four cubic Bézier curves.
+    /// Based on http://spencermortensen.com/articles/bezier-circle/
     pub fn circle(&mut self, x: f32, y: f32, r: f32) -> io::Result<()> {
-        // not actually a proper cirlce, but a silly aproximation.
         let t = y - r;
         let b = y + r;
-        let l = x - r * SQRT_2;
-        let r = x + r * SQRT_2;
-        write!(self.output, "{} {} m {} {} {} {} {} {} c {} {} {} {} {} {} c ",
+        let left = x - r;
+        let right = x + r;
+        let c = 0.551915024494;
+        let leftp = x - (r * c);
+        let rightp = x + (r * c);
+        let tp = y - (r * c);
+        let bp = y + (r * c);
+        write!(self.output, "{} {} m {} {} {} {} {} {} c {} {} {} {} {} {} c {} {} {} {} {} {} c {} {} {} {} {} {} c\n",
                x, t,
-               l, t, l, b, x, b,
-               r, b, r, t, x, t)
+               leftp, t, left, tp, left, y,
+               left, bp, leftp, b, x, b,
+               rightp, b, right, bp, right, y,
+               right, tp, rightp, t, x, t)
     }
     pub fn stroke(&mut self) -> io::Result<()> {
         write!(self.output, "s\n")
