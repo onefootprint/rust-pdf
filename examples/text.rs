@@ -9,10 +9,8 @@ fn main() {
     document.render_page(300.0, 400.0, |c| {
         try!(c.set_stroke_color(200, 200, 255));
         try!(c.rectangle(10.0, 10.0, 280.0, 380.0));
-        try!(c.move_to(10.0, 300.0));
-        try!(c.line_to(290.0, 300.0));
-        try!(c.move_to(150.0, 10.0));
-        try!(c.line_to(150.0, 390.0));
+        try!(c.line(10.0, 300.0, 290.0, 300.0));
+        try!(c.line(150.0, 10.0, 150.0, 390.0));
         try!(c.stroke());
         let helvetica = c.get_font(FontSource::Helvetica);
         try!(c.text(|t| {

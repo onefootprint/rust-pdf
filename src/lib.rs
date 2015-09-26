@@ -217,7 +217,8 @@ impl<'a, W: Write> Canvas<'a, W> {
         write!(self.output, "{} {} {} sc\n", norm(r), norm(g), norm(b))
     }
     pub fn line(&mut self, x1: f32, y1: f32, x2: f32, y2: f32) -> io::Result<()> {
-        write!(self.output, "{} {} m {} {} l s\n", x1, y1, x2, y2)
+        try!(self.move_to(x1, y1));
+        self.line_to(x2, y2)
     }
     pub fn move_to(&mut self, x: f32, y: f32) -> io::Result<()> {
         write!(self.output, "{} {} m ", x, y)
