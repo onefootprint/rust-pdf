@@ -1,4 +1,6 @@
 use std::io::{Seek, SeekFrom, Write, self};
+use std::fmt;
+use std::collections::HashMap;
 
 pub struct Pdf<'a, W: 'a + Write + Seek> {
     output: &'a mut W,
@@ -6,8 +8,56 @@ pub struct Pdf<'a, W: 'a + Write + Seek> {
     page_objects_ids: Vec<usize>,
 }
 
+#[allow(non_camel_case_types)]
+#[derive(Debug, PartialEq, Eq, Hash)]
+pub enum FontSource {
+    // The "Base14" built-in fonts in PDF.
+    // Underscores in these names are hyphens in the real names.
+    // TODO Add a way to handle other fonts.
+    Courier,
+    Courier_Bold,
+    Courier_Oblique,
+    Courier_BoldOblique,
+    Helvetica,
+    Helvetica_Bold,
+    Helvetica_Oblique,
+    Helvetica_BoldOblique,
+    Times_Roman,
+    Times_Bold,
+    Times_Italic,
+    Times_BoldItalic,
+    Symbol,
+    ZapfDingbats
+}
+
+impl FontSource {
+    fn write_object<'a, W: 'a + Write + Seek>(&self, pdf: &mut Pdf<'a, W>) -> io::Result<usize> {
+        // Note: This is enough for a Base14 font, other fonts will
+        // require a stream for the actual font, and probably another
+        // object for metrics etc
+        pdf.write_new_object(|font_object_id, pdf| {
+            let name = format!("{:?}", self).replace("_", "-");
+            try!(write!(pdf.output,
+                        "<< /Type /Font /Subtype /Type1 /BaseFont /{} >>\n",
+                        name));
+            Ok(font_object_id)
+        })
+    }
+}
+
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
+pub struct FontRef {
+    n: usize
+}
+impl fmt::Display for FontRef {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "/F{}", self.n)
+    }
+}
+
 pub struct Canvas<'a, W: 'a + Write> {
     output: &'a mut W,
+    fonts: &'a mut HashMap<FontSource, FontRef>
 }
 
 pub struct TextObject<'a, W: 'a + Write> {
@@ -37,7 +87,7 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
 
     pub fn render_page<F>(&mut self, width: f32, height: f32, render_contents: F) -> io::Result<()>
     where F: FnOnce(&mut Canvas<W>) -> io::Result<()> {
-        let (contents_object_id, content_length) =
+        let (contents_object_id, content_length, fonts) =
         try!(self.write_new_object(move |contents_object_id, pdf| {
             // Guess the ID of the next object. (We’ll assert it below.)
             try!(write!(pdf.output, "<<  /Length {} 0 R\n", contents_object_id + 1));
@@ -46,27 +96,33 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
 
             let start = try!(pdf.tell());
             try!(write!(pdf.output, "/DeviceRGB cs /DeviceRGB CS\n"));
-            try!(render_contents(&mut Canvas { output: pdf.output }));
+            let mut fonts : HashMap<FontSource, FontRef> = HashMap::new();
+            try!(render_contents(&mut Canvas { output: pdf.output,
+                                               fonts: &mut fonts }));
             let end = try!(pdf.tell());
 
             try!(write!(pdf.output, "endstream\n"));
-            Ok((contents_object_id, end - start))
+            Ok((contents_object_id, end - start, fonts))
         }));
         try!(self.write_new_object(|length_object_id, pdf| {
             assert!(length_object_id == contents_object_id + 1);
             write!(pdf.output, "{}\n", content_length)
         }));
-        let font_object_id =
-            try!(self.write_new_object(|font_object_id, pdf| {
-                try!(write!(pdf.output, "<< /Type /Font /Subtype /Type1"));
-                try!(write!(pdf.output, "   /BaseFont /Helvetica >>"));
-                Ok(font_object_id)
-            }));
+
+        let mut font_object_ids : HashMap<FontRef, usize> = HashMap::new();
+        for (src, r) in &fonts {
+            let object_id = try!(src.write_object(self));
+            font_object_ids.insert(*r, object_id);
+        }
+
         let page_object_id = try!(self.write_new_object(|page_object_id, pdf| {
             try!(write!(pdf.output, "<<  /Type /Page\n"));
             try!(write!(pdf.output, "    /Parent {} 0 R\n", PAGES_OBJECT_ID));
-            // FIXME Actually manage fonts!
-            try!(write!(pdf.output, "    /Resources << /Font << /F1 {} 0 R >> >>\n", font_object_id));
+            try!(write!(pdf.output, "    /Resources << /Font << "));
+            for (r, object_id) in &font_object_ids {
+                try!(write!(pdf.output, "{} {} 0 R ", r, object_id));
+            }
+            try!(write!(pdf.output, ">> >>\n"));
             try!(write!(pdf.output, "    /MediaBox [ 0 0 {} {} ]\n", width, height));
             try!(write!(pdf.output, "    /Contents {} 0 R\n", contents_object_id));
             try!(write!(pdf.output, ">>\n"));
@@ -198,6 +254,15 @@ impl<'a, W: Write> Canvas<'a, W> {
     pub fn fill(&mut self) -> io::Result<()> {
         write!(self.output, "f\n")
     }
+    pub fn get_font(&mut self, font: FontSource) -> FontRef {
+        if let Some(&r) = self.fonts.get(&font) {
+            return r;
+        }
+        let n = self.fonts.len();
+        let r = FontRef { n: n };
+        self.fonts.insert(font, r);
+        r
+    }
     pub fn text<F>(&mut self, render_text: F) -> io::Result<()>
         where F: FnOnce(&mut TextObject<W>) -> io::Result<()> {
             try!(write!(self.output, "BT\n"));
@@ -207,9 +272,8 @@ impl<'a, W: Write> Canvas<'a, W> {
 }
 
 impl<'a, W: Write> TextObject<'a, W> {
-    /// TODO Get the font name and make a resource properly
-    pub fn set_font(&mut self, size: f32) -> io::Result<()> {
-        write!(self.output, "/F1 {} Tf\n", size)
+    pub fn set_font(&mut self, font: FontRef, size: f32) -> io::Result<()> {
+        write!(self.output, "{} {} Tf\n", font, size)
     }
     pub fn set_leading(&mut self, leading: f32) -> io::Result<()> {
         write!(self.output, "{} TL\n", leading)
