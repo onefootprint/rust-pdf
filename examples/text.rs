@@ -1,7 +1,31 @@
 extern crate pdf;
 
-use pdf::{Pdf, FontSource};
+use pdf::{Pdf, FontSource, Canvas};
 use std::fs::File;
+use std::io;
+
+fn right_text<'a>(c: &mut Canvas<'a, File>, x: f32, y: f32,
+                  font: FontSource, size: f32,
+                  text: &str) -> io::Result<()> {
+    let text_width = font.get_width(size, text);
+    let font = c.get_font(font);
+    c.text(|t| {
+        try!(t.set_font(font, size));
+        try!(t.pos(x - text_width, y));
+        t.show(text)
+    })
+}
+fn center_text<'a>(c: &mut Canvas<'a, File>, x: f32, y: f32,
+                  font: FontSource, size: f32,
+                  text: &str) -> io::Result<()> {
+    let text_width = font.get_width(size, text);
+    let font = c.get_font(font);
+    c.text(|t| {
+        try!(t.set_font(font, size));
+        try!(t.pos(x - text_width / 2.0, y));
+        t.show(text)
+    })
+}
 
 fn main() {
     let mut file = File::create("text.pdf").unwrap();
@@ -22,15 +46,12 @@ fn main() {
             try!(t.pos(10.0, 10.0));
             t.show("Bottom left")
         }));
-        try!(c.text(|t| {
-            // TODO Use metrics to be able to center, right-lead and justify text.
-            try!(t.pos(290.0 - 48.0, 380.0));
-            t.show("Top right")
-        }));
-        try!(c.text(|t| {
-            try!(t.pos(290.0 - 65.0, 10.0));
-            t.show("Bottom right")
-        }));
+        try!(right_text(c, 290.0, 380.0, FontSource::Helvetica, 12.0,
+                        "Top right"));
+        try!(right_text(c, 290.0, 10.0, FontSource::Helvetica, 12.0,
+                        "Bottom right"));
+        try!(center_text(c, 150.0, 330.0, FontSource::Times_Bold, 18.0,
+                         "Centered"));
         let times = c.get_font(FontSource::Times_Roman);
         try!(c.text(|t| {
             try!(t.set_font(times, 14.0));

@@ -1,6 +1,10 @@
 use std::io::{Seek, SeekFrom, Write, self};
 use std::fmt;
 use std::collections::HashMap;
+use std::fs::File;
+
+mod fontmetrics;
+pub use ::fontmetrics::FontMetrics;
 
 pub struct Pdf<'a, W: 'a + Write + Seek> {
     output: &'a mut W,
@@ -36,12 +40,23 @@ impl FontSource {
         // require a stream for the actual font, and probably another
         // object for metrics etc
         pdf.write_new_object(|font_object_id, pdf| {
-            let name = format!("{:?}", self).replace("_", "-");
             try!(write!(pdf.output,
                         "<< /Type /Font /Subtype /Type1 /BaseFont /{} >>\n",
-                        name));
+                        self.pdf_name()));
             Ok(font_object_id)
         })
+    }
+    pub fn pdf_name(&self) -> String {
+        format!("{:?}", self).replace("_", "-")
+    }
+    pub fn get_width(&self, size: f32, text: &str) -> f32 {
+        let file = File::open(format!("data/{}.afm", self.pdf_name())).unwrap();
+        let metrics = FontMetrics::parse(file).unwrap();
+        let mut result = 0.0;
+        for char in text.chars() {
+            result += size * metrics.get_width(char as u8).unwrap_or(100) as f32 / 1000.0;
+        }
+        result
     }
 }
 
