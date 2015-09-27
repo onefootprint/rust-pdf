@@ -49,14 +49,28 @@ impl FontSource {
     pub fn pdf_name(&self) -> String {
         format!("{:?}", self).replace("_", "-")
     }
+    /// Get the width of a string in this font at given size.
+    /// Currently, the metrics needs to be found in data/[name].afm
+    ///
+    /// # Examples
+    /// ```
+    /// use pdf::FontSource;
+    /// assert_eq!(62.004, FontSource::Helvetica.get_width(12.0, "Hello World"));
+    /// assert_eq!(60.0, FontSource::Courier.get_width(10.0, "0123456789"));
+    /// ```
     pub fn get_width(&self, size: f32, text: &str) -> f32 {
-        let file = File::open(format!("data/{}.afm", self.pdf_name())).unwrap();
-        let metrics = FontMetrics::parse(file).unwrap();
-        let mut result = 0.0;
-        for char in text.chars() {
-            result += size * metrics.get_width(char as u8).unwrap_or(100) as f32 / 1000.0;
+        let filename = format!("data/{}.afm", self.pdf_name());
+        if let Ok(file) = File::open(&filename) {
+            let metrics = FontMetrics::parse(file).unwrap();
+            let mut result = 0;
+            for char in text.chars() {
+                result += metrics.get_width(char as u8).unwrap_or(100) as u32;
+            }
+            size * result as f32 / 1000.0
+        } else {
+            println!("Failed to open metrics file {}", filename);
+            0.0
         }
-        result
     }
 }
 
@@ -284,6 +298,28 @@ impl<'a, W: Write> Canvas<'a, W> {
             try!(write!(self.output, "BT\n"));
             try!(render_text(&mut TextObject { output: self.output }));
             write!(self.output, "ET\n")
+        }
+    /// Utility method for placing a string of text.
+    pub fn right_text(&mut self, x: f32, y: f32, font: FontSource, size: f32,
+                      text: &str) -> io::Result<()> {
+        let text_width = font.get_width(size, text);
+        let font = self.get_font(font);
+        self.text(|t| {
+            try!(t.set_font(font, size));
+            try!(t.pos(x - text_width, y));
+            t.show(text)
+        })
+    }
+    /// Utility method for placing a string of text.
+    pub fn center_text(&mut self, x: f32, y: f32, font: FontSource, size: f32,
+                       text: &str) -> io::Result<()> {
+        let text_width = font.get_width(size, text);
+        let font = self.get_font(font);
+        self.text(|t| {
+            try!(t.set_font(font, size));
+            try!(t.pos(x - text_width / 2.0, y));
+            t.show(text)
+        })
     }
 }
 

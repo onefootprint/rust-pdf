@@ -16,20 +16,12 @@ impl FontMetrics {
             let line = line.unwrap();
             let words : Vec<&str> = line.split_whitespace().collect();
             if words[0] == "C" && words[3] == "WX" {
-                if let (Ok(c), Ok(w)) = (words[1].parse::<u8>(), words[4].parse::<u16>()) {
+                if let (Ok(c), Ok(w)) = (words[1].parse::<u8>(),
+                                         words[4].parse::<u16>()) {
                     result.widths.insert(c, w);
-                    //println!("Char {} is {} wide", c, w)
                 }
             }
-            /*
-            match words {
-                ["C", charnum, ";", "WX", width, ";", "N", _name, ";", _b1, _b2, _b3, _b4, ";"] =>
-                { println!("Char {} is {} wide", charnum, width); },
-                _ => ()
-            }
-            */
         }
-        //result.widths.insert(32, 300);
         Ok(result)
     }
 
