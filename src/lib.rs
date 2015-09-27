@@ -59,6 +59,20 @@ impl FontSource {
     /// assert_eq!(60.0, FontSource::Courier.get_width(10.0, "0123456789"));
     /// ```
     pub fn get_width(&self, size: f32, text: &str) -> f32 {
+        size * self.get_width_raw(text) as f32 / 1000.0
+    }
+
+    /// Get the width of a string in thousands of unit of text space.
+    /// This unit is what is used in some places internally in pdf files.
+    /// Currently, the metrics needs to be found in data/[name].afm
+    ///
+    /// # Examples
+    /// ```
+    /// use pdf::FontSource;
+    /// assert_eq!(5167, FontSource::Helvetica.get_width_raw("Hello World"));
+    /// assert_eq!(600, FontSource::Courier.get_width_raw("A"));
+    /// ```
+    pub fn get_width_raw(&self, text: &str) -> u32 {
         let filename = format!("data/{}.afm", self.pdf_name());
         if let Ok(file) = File::open(&filename) {
             let metrics = FontMetrics::parse(file).unwrap();
@@ -66,10 +80,10 @@ impl FontSource {
             for char in text.chars() {
                 result += metrics.get_width(char as u8).unwrap_or(100) as u32;
             }
-            size * result as f32 / 1000.0
+            result
         } else {
             println!("Failed to open metrics file {}", filename);
-            0.0
+            0
         }
     }
 }
@@ -338,6 +352,11 @@ impl<'a, W: Write> TextObject<'a, W> {
     }
     pub fn show(&mut self, text: &str) -> io::Result<()> {
         write!(self.output, "({}) Tj\n", text)
+    }
+    // TODO This method should have a better name, and take any combination
+    // of strings as integers as arguments.
+    pub fn show_j(&mut self, text: &str, offset: i32) -> io::Result<()> {
+        write!(self.output, "[({}) {}] TJ\n", text, offset)
     }
     pub fn show_line(&mut self, text: &str) -> io::Result<()> {
         write!(self.output, "({}) '\n", text)
