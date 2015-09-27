@@ -279,6 +279,9 @@ impl<'a, W: Write> TextObject<'a, W> {
     pub fn set_leading(&mut self, leading: f32) -> io::Result<()> {
         write!(self.output, "{} TL\n", leading)
     }
+    pub fn set_rise(&mut self, rise: f32) -> io::Result<()> {
+        write!(self.output, "{} Ts", rise)
+    }
     pub fn pos(&mut self, x: f32, y: f32) -> io::Result<()> {
         write!(self.output, "{} {} Td\n", x, y)
     }
@@ -287,5 +290,11 @@ impl<'a, W: Write> TextObject<'a, W> {
     }
     pub fn show_line(&mut self, text: &str) -> io::Result<()> {
         write!(self.output, "({}) '\n", text)
+    }
+    pub fn gsave(&mut self) -> io::Result<()> {
+        write!(self.output, "q\n")
+    }
+    pub fn grestore(&mut self) -> io::Result<()> {
+        write!(self.output, "Q\n")
     }
 }
