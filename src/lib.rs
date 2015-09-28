@@ -5,6 +5,7 @@ use std::fs::File;
 
 mod fontmetrics;
 pub use ::fontmetrics::FontMetrics;
+use ::fontmetrics::get_builtin_metrics;
 
 pub struct Pdf<'a, W: 'a + Write + Seek> {
     output: &'a mut W,
@@ -73,17 +74,26 @@ impl FontSource {
     /// assert_eq!(600, FontSource::Courier.get_width_raw("A"));
     /// ```
     pub fn get_width_raw(&self, text: &str) -> u32 {
-        let filename = format!("data/{}.afm", self.pdf_name());
-        if let Ok(file) = File::open(&filename) {
-            let metrics = FontMetrics::parse(file).unwrap();
+        if let Ok(metrics) = self.get_metrics() {
             let mut result = 0;
             for char in text.chars() {
                 result += metrics.get_width(char as u8).unwrap_or(100) as u32;
             }
             result
         } else {
-            println!("Failed to open metrics file {}", filename);
             0
+        }
+    }
+    pub fn get_metrics(&self) -> io::Result<FontMetrics> {
+        if let Some(result) = get_builtin_metrics(&self.pdf_name()) {
+            return Ok(result);
+        }
+        // TODO Non-builtin metrics wont be found here, use some search path.
+        let filename = format!("data/{}.afm", self.pdf_name());
+        println!("Reading metrics {}", filename);
+        match File::open(&filename) {
+            Ok(file) => FontMetrics::parse(file),
+            Err(e) => Err(e)
         }
     }
 }

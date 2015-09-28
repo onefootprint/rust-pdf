@@ -32,3 +32,5 @@ impl FontMetrics {
         }
     }
 }
+
+include!(concat!(env!("OUT_DIR"), "/metrics_data.rs"));
