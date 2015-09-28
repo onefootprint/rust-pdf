@@ -42,7 +42,7 @@ impl FontSource {
         // object for metrics etc
         pdf.write_new_object(|font_object_id, pdf| {
             try!(write!(pdf.output,
-                        "<< /Type /Font /Subtype /Type1 /BaseFont /{} >>\n",
+                        "<< /Type /Font /Subtype /Type1 /BaseFont /{} /Encoding /WinAnsiEncoding >>\n",
                         self.pdf_name()));
             Ok(font_object_id)
         })
@@ -76,8 +76,8 @@ impl FontSource {
     pub fn get_width_raw(&self, text: &str) -> u32 {
         if let Ok(metrics) = self.get_metrics() {
             let mut result = 0;
-            for char in text.chars() {
-                result += metrics.get_width(char as u8).unwrap_or(100) as u32;
+            for char in pdf_encode_string(text) {
+                result += metrics.get_width(char).unwrap_or(100) as u32;
             }
             result
         } else {
@@ -361,15 +361,23 @@ impl<'a, W: Write> TextObject<'a, W> {
         write!(self.output, "{} {} Td\n", x, y)
     }
     pub fn show(&mut self, text: &str) -> io::Result<()> {
-        write!(self.output, "({}) Tj\n", text)
+        try!(self.output.write_all(b"("));
+        try!(self.output.write_all(&pdf_encode_string(text)));
+        try!(self.output.write_all(b") Tj\n"));
+        Ok(())
     }
     // TODO This method should have a better name, and take any combination
     // of strings as integers as arguments.
     pub fn show_j(&mut self, text: &str, offset: i32) -> io::Result<()> {
-        write!(self.output, "[({}) {}] TJ\n", text, offset)
+        try!(self.output.write_all(b"[("));
+        try!(self.output.write_all(&pdf_encode_string(text)));
+        write!(self.output, ") {}] TJ\n", offset)
     }
     pub fn show_line(&mut self, text: &str) -> io::Result<()> {
-        write!(self.output, "({}) '\n", text)
+        try!(self.output.write_all(b"("));
+        try!(self.output.write_all(&pdf_encode_string(text)));
+        try!(self.output.write_all(b") '\n"));
+        Ok(())
     }
     pub fn gsave(&mut self) -> io::Result<()> {
         write!(self.output, "q\n")
@@ -377,4 +385,57 @@ impl<'a, W: Write> TextObject<'a, W> {
     pub fn grestore(&mut self) -> io::Result<()> {
         write!(self.output, "Q\n")
     }
+}
+
+#[test]
+fn test_pdf_encode_string() {
+    assert_eq!(vec!(65, 66, 67), pdf_encode_string("ABC"));
+    assert_eq!(vec!(82, 228, 107, 115, 109, 246, 114, 103, 229, 115),
+               pdf_encode_string("Räksmörgås"));
+    assert_eq!(vec!(67, 111, 102, 102, 101, 101, 32, 128, 49, 46, 50, 48),
+               pdf_encode_string("Coffee €1.20"));
+}
+
+/// Return a string as a vector of bytes in PDF /WinAnsiEncoding
+fn pdf_encode_string(text: &str) -> Vec<u8> {
+    let mut result = Vec::new();
+    for ch in text.chars() {
+        match ch {
+            '\\' => { result.push('\\' as u8); result.push('\\' as u8) },
+            '(' =>  { result.push('\\' as u8); result.push('(' as u8) },
+            ')' =>  { result.push('\\' as u8); result.push(')' as u8) },
+            // /WinAnsiEncoding is kind of close to first byte of unicode
+            // Except for the 16 chars that are reserved in 8859-1 and used
+            // in Windows-1252.
+            '€' => { result.push(128) },
+            '‚' => { result.push(130) },
+            'ƒ' => { result.push(131) },
+            '„' => { result.push(132) },
+            '…' => { result.push(133) },
+            '†' => { result.push(134) },
+            '‡' => { result.push(135) },
+            'ˆ' => { result.push(136) },
+            '‰' => { result.push(137) },
+            'Š' => { result.push(138) },
+            '‹' => { result.push(139) },
+            'Œ' => { result.push(140) },
+            'Ž' => { result.push(142) },
+            '‘' => { result.push(145) },
+            '’' => { result.push(146) },
+            '“' => { result.push(147) },
+            '”' => { result.push(148) },
+            '•' => { result.push(149) },
+            '–' => { result.push(150) },
+            '—' => { result.push(151) },
+            '˜' => { result.push(152) },
+            '™' => { result.push(153) },
+            'š' => { result.push(154) },
+            '›' => { result.push(155) },
+            'ž' => { result.push(158) },
+            'Ÿ' => { result.push(159) },
+            ch @ ' '...'ÿ' => { result.push(ch as u8) }
+            _ =>    { result.push('?' as u8); }
+        }
+    }
+    result
 }
