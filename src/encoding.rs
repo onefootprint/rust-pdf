@@ -33,7 +33,7 @@ lazy_static! {
             "parenleft", "parenright", "asterisk", "plus",
             "comma", "hyphen", "period", "slash"));
         result.init_block(0o60, vec!(
-            "zero", "one", "two", "tree", "four", "five", "six", "seven"));
+            "zero", "one", "two", "three", "four", "five", "six", "seven"));
         result.init_block(0o70, vec!(
             "eight", "nine", "colon", "semicolon",
             "less", "equal", "greater", "question"));
