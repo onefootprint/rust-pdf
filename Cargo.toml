@@ -6,6 +6,7 @@ authors = ["Simon Sapin <simon.sapin@exyr.org>",
 license = "MIT"
 description = "Generating PDF files in pure Rust."
 repository = "https://github.com/kaj/rust-pdf"
+readme = "README.md"
 
 build = "src/build_metrics.rs"
 
