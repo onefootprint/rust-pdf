@@ -1,13 +1,26 @@
 use std::collections::BTreeMap;
 
-
 #[derive(Debug)]
 pub struct Encoding {
     name_to_code: BTreeMap<&'static str, u8>
 }
 
 impl Encoding {
-    /// Get the encoded code point from a type1 name
+    /// Get the encoded code point from a type1 character name.
+    /// Character names are case sensitive and contains only ascii letters.
+    /// If the name is not available in the encoding, or is not a proper
+    /// character name, None is returned.
+    ///
+    /// # Example
+    /// ````
+    /// use pdf::WIN_ANSI_ENCODING;
+    /// assert_eq!(Some(32),  WIN_ANSI_ENCODING.get_code("space"));
+    /// assert_eq!(Some(65),  WIN_ANSI_ENCODING.get_code("A"));
+    /// assert_eq!(Some(229), WIN_ANSI_ENCODING.get_code("aring"));
+    /// assert_eq!(None,      WIN_ANSI_ENCODING.get_code("Lslash"));
+    /// assert_eq!(None,      WIN_ANSI_ENCODING.get_code(""));
+    /// assert_eq!(None,      WIN_ANSI_ENCODING.get_code("☺"));
+    /// ````
     pub fn get_code(&self, name: &str) -> Option<u8> {
         match self.name_to_code.get(name) {
             Some(&code) => Some(code),

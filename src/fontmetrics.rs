@@ -4,11 +4,14 @@ use std::fs::File;
 use std::io::BufRead;
 
 /// Relevant data that can be loaded from an AFM (Adobe Font Metrics) file.
+/// A FontMetrics object is specific to a given encoding (WinAnsiEncoding
+/// for the built-in FontMetrics objects).
 pub struct FontMetrics {
     widths: BTreeMap<u8, u16>
 }
 
 impl FontMetrics {
+    /// Create a FontMetrics by reading an .afm file.
     pub fn parse(source: File) -> io::Result<FontMetrics> {
         let source = io::BufReader::new(source);
         let mut result = FontMetrics { widths: BTreeMap::new() };
@@ -25,6 +28,8 @@ impl FontMetrics {
         Ok(result)
     }
 
+    /// Get the width of a specific character.
+    /// The character is given in the encoding of the FontMetrics object.
     pub fn get_width(&self, char: u8) -> Option<u16> {
         match self.widths.get(&char) {
             Some(&w) => Some(w),

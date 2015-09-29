@@ -20,12 +20,12 @@ pub struct Pdf<'a, W: 'a + Write + Seek> {
     page_objects_ids: Vec<usize>,
 }
 
+/// The "Base14" built-in fonts in PDF.
+/// Underscores in these names are hyphens in the real names.
+/// TODO Add a way to handle other fonts.
 #[allow(non_camel_case_types)]
 #[derive(Debug, PartialEq, Eq, Hash)]
 pub enum FontSource {
-    // The "Base14" built-in fonts in PDF.
-    // Underscores in these names are hyphens in the real names.
-    // TODO Add a way to handle other fonts.
     Courier,
     Courier_Bold,
     Courier_Oblique,
@@ -54,9 +54,17 @@ impl FontSource {
             Ok(font_object_id)
         })
     }
+
+    /// Get the PDF name of this font.
+    /// # Examples
+    /// ```
+    /// use pdf::FontSource;
+    /// assert_eq!("Times-Roman", FontSource::Times_Roman.pdf_name());
+    /// ```
     pub fn pdf_name(&self) -> String {
         format!("{:?}", self).replace("_", "-")
     }
+
     /// Get the width of a string in this font at given size.
     /// Currently, the metrics needs to be found in data/[name].afm
     ///
@@ -91,6 +99,8 @@ impl FontSource {
             0
         }
     }
+
+    /// Get the font metrics for font.
     pub fn get_metrics(&self) -> io::Result<FontMetrics> {
         if let Some(result) = get_builtin_metrics(&self.pdf_name()) {
             return Ok(result);
