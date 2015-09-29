@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate lazy_static;
+
 use std::io::{Seek, SeekFrom, Write, self};
 use std::fmt;
 use std::collections::HashMap;
@@ -6,6 +9,10 @@ use std::fs::File;
 mod fontmetrics;
 pub use ::fontmetrics::FontMetrics;
 use ::fontmetrics::get_builtin_metrics;
+
+mod encoding;
+pub use ::encoding::Encoding;
+pub use ::encoding::WIN_ANSI_ENCODING;
 
 pub struct Pdf<'a, W: 'a + Write + Seek> {
     output: &'a mut W,

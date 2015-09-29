@@ -1,19 +1,23 @@
+#[macro_use]
+extern crate lazy_static;
+
 use std::env;
 use std::fs::File;
 use std::io::{Write, Result};
 use std::path::Path;
+
+mod encoding;
+use ::encoding::WIN_ANSI_ENCODING;
 
 fn write_cond(f: &mut File, name: &str, data: &str) -> Result<()> {
     try!(writeln!(f, "  if name == \"{}\" {{", name));
     try!(writeln!(f, "    let mut widths : BTreeMap<u8, u16> = BTreeMap::new();"));
     for line in data.lines() {
         let words : Vec<&str> = line.split_whitespace().collect();
-        if words[0] == "C" && words[3] == "WX" {
-            if let (Ok(c), Ok(w)) = (words[1].parse::<i16>(),
-                                     words[4].parse::<u16>()) {
-                if c != -1 {
-                    try!(writeln!(f, "    widths.insert({}, {});", c, w));
-                }
+        if words[0] == "C" && words[3] == "WX" && words[6] == "N" {
+            if let (Some(c), Ok(w)) = (WIN_ANSI_ENCODING.get_code(words[7]),
+                                       words[4].parse::<u16>()) {
+                try!(writeln!(f, "    widths.insert({}, {});", c, w));
             }
         }
     }

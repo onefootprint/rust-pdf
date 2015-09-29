@@ -37,6 +37,16 @@ fn main() {
             try!(t.show_line("paragraph of three lines. Lorem ipsum dolor"));
             t.show_line("sit amet. Blahonga.")
         }));
+
+        // In Swedish, we use the letters å, ä, and ö
+        // in words like sloe liqueur.  That is why rust-pdf
+        // uses /WinAnsiEncoding for text.
+        try!(c.right_text(290.0, 200.0, FontSource::Times_Italic, 14.0,
+                          "På svenska använder vi bokstäverna å, ä & ö"));
+        try!(c.right_text(290.0, 182.0, FontSource::Times_Italic, 14.0,
+                          "i ord som slånbärslikör. Därför använder"));
+        try!(c.right_text(290.0, 164.0, FontSource::Times_Italic, 14.0,
+                          "rust-pdf /WinAnsiEncoding för text."));
         Ok(())
     }).unwrap();
     document.finish().unwrap();

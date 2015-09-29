@@ -1,6 +1,6 @@
 [package]
 name = "pdf"
-version = "0.1.3"
+version = "0.1.4"
 authors = ["Simon Sapin <simon.sapin@exyr.org>",
 	   "Rasmus Kaj <rasmus@krats.se>"]
 license = "MIT"
@@ -8,3 +8,9 @@ description = "Generating PDF files in pure Rust."
 repository = "https://github.com/SimonSapin/rust-pdf"
 
 build = "src/build_metrics.rs"
+
+[build-dependencies]
+lazy_static = "*"
+
+[dependencies]
+lazy_static = "*"
