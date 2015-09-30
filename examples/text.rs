@@ -14,7 +14,7 @@ fn main() {
         try!(c.stroke());
         let helvetica = c.get_font(FontSource::Helvetica);
         try!(c.text(|t| {
-            try!(t.set_font(helvetica, 12.0));
+            try!(t.set_font(&helvetica, 12.0));
             try!(t.pos(10.0, 380.0));
             t.show("Top left")
         }));
@@ -30,7 +30,7 @@ fn main() {
                            "Centered"));
         let times = c.get_font(FontSource::Times_Roman);
         try!(c.text(|t| {
-            try!(t.set_font(times, 14.0));
+            try!(t.set_font(&times, 14.0));
             try!(t.set_leading(18.0));
             try!(t.pos(10.0, 300.0));
             try!(t.show("Some lines of text in what might look like a"));

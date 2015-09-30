@@ -376,7 +376,7 @@ impl<'a, W: Write> Canvas<'a, W> {
         let font = self.get_font(font);
         self.text(|t| {
             let text_width = font.get_width(size, text);
-            try!(t.set_font(font, size));
+            try!(t.set_font(&font, size));
             try!(t.pos(x - text_width, y));
             t.show(text)
         })
@@ -387,7 +387,7 @@ impl<'a, W: Write> Canvas<'a, W> {
         let text_width = font.get_width(size, text);
         let font = self.get_font(font);
         self.text(|t| {
-            try!(t.set_font(font, size));
+            try!(t.set_font(&font, size));
             try!(t.pos(x - text_width / 2.0, y));
             t.show(text)
         })
@@ -395,7 +395,7 @@ impl<'a, W: Write> Canvas<'a, W> {
 }
 
 impl<'a, W: Write> TextObject<'a, W> {
-    pub fn set_font(&mut self, font: FontRef, size: f32) -> io::Result<()> {
+    pub fn set_font(&mut self, font: &FontRef, size: f32) -> io::Result<()> {
         write!(self.output, "{} {} Tf\n", font, size)
     }
     pub fn set_leading(&mut self, leading: f32) -> io::Result<()> {
