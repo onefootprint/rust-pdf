@@ -14,6 +14,7 @@ mod encoding;
 pub use ::encoding::Encoding;
 pub use ::encoding::WIN_ANSI_ENCODING;
 
+/// The top-level object for writing a PDF.
 pub struct Pdf<'a, W: 'a + Write + Seek> {
     output: &'a mut W,
     object_offsets: Vec<i64>,
@@ -138,6 +139,8 @@ const ROOT_OBJECT_ID: usize = 1;
 const PAGES_OBJECT_ID: usize = 2;
 
 impl<'a, W: Write + Seek> Pdf<'a, W> {
+
+    /// Create a new PDF document, writing to `output`.
     pub fn new(output: &'a mut W) -> io::Result<Pdf<'a, W>> {
         // FIXME: Find out the lowest version that contains the features we’re using.
         try!(output.write_all(b"%PDF-1.7\n%\xB5\xED\xAE\xFB\n"));
@@ -155,6 +158,11 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
         self.output.seek(SeekFrom::Current(0))
     }
 
+    /// Create a new page in the PDF document.
+    ///
+    /// The page will be `width` x `height` points large, and the
+    /// actual content of the page will be created by the function
+    /// `render_contents` by applying drawing methods on the Canvas.
     pub fn render_page<F>(&mut self, width: f32, height: f32, render_contents: F) -> io::Result<()>
     where F: FnOnce(&mut Canvas<W>) -> io::Result<()> {
         let (contents_object_id, content_length, fonts) =
@@ -228,6 +236,10 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
         Ok((result, offset))
     }
 
+    /// WWrite out the document trailer.
+
+    /// The trailer consists of the pages object, the root object,
+    /// the xref list, the trailer object and the startxref position.
     pub fn finish(mut self) -> io::Result<()> {
         try!(self.write_object_with_id(PAGES_OBJECT_ID, |pdf| {
             try!(write!(pdf.output, "<<  /Type /Pages\n"));
