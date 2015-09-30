@@ -1,5 +1,16 @@
 use std::collections::BTreeMap;
 
+/// Represent a text encoding used in PDF.
+/// An encoding maintains the connection between unicode code points,
+/// bytes in PDF strings, and glyph names.
+///
+/// Currently, only WIN_ANSI_ENCODING is supported, and that encoding
+/// is provided as a built-in.
+/// # Example
+/// ````
+/// use pdf;
+/// let encoding = &pdf::WIN_ANSI_ENCODING;
+/// ````
 #[derive(Debug)]
 pub struct Encoding {
     name_to_code: BTreeMap<&'static str, u8>
@@ -27,6 +38,62 @@ impl Encoding {
             None => None
         }
     }
+
+    /// Convert a rust string to a vector of bytes in the encoding.
+    /// FIXME This is currently hardcoded to /WinAnsiEncoding
+    /// # Example
+    /// ````
+    /// use pdf;
+    /// let e = &pdf::WIN_ANSI_ENCODING;
+    /// assert_eq!(vec!(65, 66, 67), e.encode_string("ABC"));
+    /// assert_eq!(vec!(82, 228, 107, 115, 109, 246, 114, 103, 229, 115),
+    ///            e.encode_string("Räksmörgås"));
+    /// assert_eq!(vec!(67, 111, 102, 102, 101, 101, 32, 128, 49, 46, 50, 48),
+    ///            e.encode_string("Coffee €1.20"));
+    /// ````
+    pub fn encode_string(&self, text: &str) -> Vec<u8> {
+        let mut result = Vec::new();
+        for ch in text.chars() {
+            match ch {
+                '\\' => { result.push('\\' as u8); result.push('\\' as u8) },
+                '(' =>  { result.push('\\' as u8); result.push('(' as u8) },
+                ')' =>  { result.push('\\' as u8); result.push(')' as u8) },
+                // /WinAnsiEncoding is kind of close to first byte of unicode
+                // Except for the 16 chars that are reserved in 8859-1 and used
+                // in Windows-1252.
+                '€' => { result.push(128) },
+                '‚' => { result.push(130) },
+                'ƒ' => { result.push(131) },
+                '„' => { result.push(132) },
+                '…' => { result.push(133) },
+                '†' => { result.push(134) },
+                '‡' => { result.push(135) },
+                'ˆ' => { result.push(136) },
+                '‰' => { result.push(137) },
+                'Š' => { result.push(138) },
+                '‹' => { result.push(139) },
+                'Œ' => { result.push(140) },
+                'Ž' => { result.push(142) },
+                '‘' => { result.push(145) },
+                '’' => { result.push(146) },
+                '“' => { result.push(147) },
+                '”' => { result.push(148) },
+                '•' => { result.push(149) },
+                '–' => { result.push(150) },
+                '—' => { result.push(151) },
+                '˜' => { result.push(152) },
+                '™' => { result.push(153) },
+                'š' => { result.push(154) },
+                '›' => { result.push(155) },
+                'ž' => { result.push(158) },
+                'Ÿ' => { result.push(159) },
+                ch @ ' '...'ÿ' => { result.push(ch as u8) }
+                _ =>    { result.push('?' as u8); }
+            }
+        }
+        result
+    }
+
     fn init_block(&mut self, start: u8, data: Vec<&'static str>) {
         let mut i = start - 1;
         for name in data {
