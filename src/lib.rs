@@ -372,7 +372,13 @@ impl<'a, W: Write> TextObject<'a, W> {
         write!(self.output, "{} TL\n", leading)
     }
     pub fn set_rise(&mut self, rise: f32) -> io::Result<()> {
-        write!(self.output, "{} Ts", rise)
+        write!(self.output, "{} Ts\n", rise)
+    }
+    pub fn set_char_spacing(&mut self, a_c: f32) -> io::Result<()> {
+        write!(self.output, "{} Tc\n", a_c)
+    }
+    pub fn set_word_spacing(&mut self, a_w: f32) -> io::Result<()> {
+        write!(self.output, "{} Tw\n", a_w)
     }
     pub fn pos(&mut self, x: f32, y: f32) -> io::Result<()> {
         write!(self.output, "{} {} Td\n", x, y)
