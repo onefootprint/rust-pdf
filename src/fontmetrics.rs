@@ -6,6 +6,7 @@ use std::io::BufRead;
 /// Relevant data that can be loaded from an AFM (Adobe Font Metrics) file.
 /// A FontMetrics object is specific to a given encoding (WinAnsiEncoding
 /// for the built-in FontMetrics objects).
+#[derive(Debug, Hash, PartialEq, Eq, Clone)]
 pub struct FontMetrics {
     widths: BTreeMap<u8, u16>
 }

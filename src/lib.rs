@@ -5,6 +5,7 @@ use std::io::{Seek, SeekFrom, Write, self};
 use std::fmt;
 use std::collections::HashMap;
 use std::fs::File;
+use std::sync::Arc;
 
 mod fontmetrics;
 pub use ::fontmetrics::FontMetrics;
@@ -114,10 +115,29 @@ impl FontSource {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct FontRef {
-    n: usize
+    n: usize,
+    metrics: Arc<FontMetrics>
 }
+
+impl FontRef {
+    /// Get the width of a string in this font at given size.
+    pub fn get_width(&self, size: f32, text: &str) -> f32 {
+        size * self.get_width_raw(text) as f32 / 1000.0
+    }
+
+    /// Get the width of a string in thousands of unit of text space.
+    /// This unit is what is used in some places internally in pdf files.
+    pub fn get_width_raw(&self, text: &str) -> u32 {
+        let mut result = 0;
+        for char in WIN_ANSI_ENCODING.encode_string(text) {
+            result += self.metrics.get_width(char).unwrap_or(100) as u32;
+        }
+        result
+    }
+}
+
 impl fmt::Display for FontRef {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "/F{}", self.n)
@@ -188,7 +208,7 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
         let mut font_object_ids : HashMap<FontRef, usize> = HashMap::new();
         for (src, r) in &fonts {
             let object_id = try!(src.write_object(self));
-            font_object_ids.insert(*r, object_id);
+            font_object_ids.insert(r.clone(), object_id);
         }
 
         let page_object_id = try!(self.write_new_object(|page_object_id, pdf| {
@@ -336,12 +356,12 @@ impl<'a, W: Write> Canvas<'a, W> {
         write!(self.output, "f\n")
     }
     pub fn get_font(&mut self, font: FontSource) -> FontRef {
-        if let Some(&r) = self.fonts.get(&font) {
-            return r;
+        if let Some(r) = self.fonts.get(&font) {
+            return r.clone();
         }
         let n = self.fonts.len();
-        let r = FontRef { n: n };
-        self.fonts.insert(font, r);
+        let r = FontRef { n: n, metrics: Arc::new(font.get_metrics().unwrap()) };
+        self.fonts.insert(font, r.clone());
         r
     }
     pub fn text<F>(&mut self, render_text: F) -> io::Result<()>
@@ -353,9 +373,9 @@ impl<'a, W: Write> Canvas<'a, W> {
     /// Utility method for placing a string of text.
     pub fn right_text(&mut self, x: f32, y: f32, font: FontSource, size: f32,
                       text: &str) -> io::Result<()> {
-        let text_width = font.get_width(size, text);
         let font = self.get_font(font);
         self.text(|t| {
+            let text_width = font.get_width(size, text);
             try!(t.set_font(font, size));
             try!(t.pos(x - text_width, y));
             t.show(text)
