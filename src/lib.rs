@@ -67,7 +67,6 @@ impl FontSource {
     }
 
     /// Get the width of a string in this font at given size.
-    /// Currently, the metrics needs to be found in data/[name].afm
     ///
     /// # Examples
     /// ```
@@ -81,7 +80,6 @@ impl FontSource {
 
     /// Get the width of a string in thousands of unit of text space.
     /// This unit is what is used in some places internally in pdf files.
-    /// Currently, the metrics needs to be found in data/[name].afm
     ///
     /// # Examples
     /// ```
