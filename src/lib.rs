@@ -1,9 +1,12 @@
 #[macro_use]
 extern crate lazy_static;
 
+extern crate time;
+
 use std::io::{Seek, SeekFrom, Write, self};
 use std::fmt;
 use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::fs::File;
 use std::sync::Arc;
 
@@ -20,6 +23,7 @@ pub struct Pdf<'a, W: 'a + Write + Seek> {
     output: &'a mut W,
     object_offsets: Vec<i64>,
     page_objects_ids: Vec<usize>,
+    document_info: BTreeMap<String, String>
 }
 
 /// The "Base14" built-in fonts in PDF.
@@ -168,7 +172,35 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
             // We reserve IDs 1 and 2 for the catalog and page tree.
             object_offsets: vec![-1, -1, -1],
             page_objects_ids: vec![],
+            document_info: BTreeMap::new(),
         })
+    }
+    /// Set metadata: the document's title.
+    pub fn set_title(&mut self, title: &str) {
+        self.document_info.insert("Title".to_string(), title.to_string());
+    }
+    /// Set metadata: the name of the person who created the document.
+    pub fn set_author(&mut self, author: &str) {
+        self.document_info.insert("Author".to_string(), author.to_string());
+    }
+    /// Set metadata: the subject of the document.
+    pub fn set_subject(&mut self, subject: &str) {
+        self.document_info.insert("Subject".to_string(), subject.to_string());
+    }
+    /// Set metadata: keywords associated with the document.
+    pub fn set_keywords(&mut self, keywords: &str) {
+        self.document_info.insert("Subject".to_string(), keywords.to_string());
+    }
+    /// Set metadata: If the document was converted to PDF from another
+    /// format, the name of the conforming product that created the original
+    /// document from which it was converted.
+    pub fn set_creator(&mut self, creator: &str) {
+        self.document_info.insert("Creator".to_string(), creator.to_string());
+    }
+    /// Set metadata: If the document was converted to PDF from another
+    /// format, the name of the conforming product that converted it to PDF.
+    pub fn set_producer(&mut self, producer: &str) {
+        self.document_info.insert("Producer".to_string(), producer.to_string());
     }
 
     /// Return the current read/write position in the output file.
@@ -254,8 +286,7 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
         Ok((result, offset))
     }
 
-    /// WWrite out the document trailer.
-
+    /// Write out the document trailer.
     /// The trailer consists of the pages object, the root object,
     /// the xref list, the trailer object and the startxref position.
     pub fn finish(mut self) -> io::Result<()> {
@@ -270,6 +301,23 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
             try!(write!(pdf.output, ">>\n"));
             Ok(())
         }));
+        let document_info_id =
+            if !self.document_info.is_empty() {
+                let info = self.document_info.clone();
+                try!(self.write_new_object(|page_object_id, pdf| {
+                    try!(write!(pdf.output, "<<"));
+                    for (key, value) in info {
+                        try!(write!(pdf.output, " /{} ({})\n", key, value));
+                    }
+                    if let Ok(now) = time::strftime("%Y%m%d%H%M%S%z",
+                                                    &time::now()) {
+                        try!(write!(pdf.output, " /CreationDate (D:{})", now));
+                        try!(write!(pdf.output, " /ModDate (D:{})", now));
+                    }
+                    try!(write!(pdf.output, ">>\n"));
+                    Ok(Some(page_object_id))
+                }))
+            } else { None };
         try!(self.write_object_with_id(ROOT_OBJECT_ID, |pdf| {
             try!(write!(pdf.output, "<<  /Type /Catalog\n"));
             try!(write!(pdf.output, "    /Pages {} 0 R\n", PAGES_OBJECT_ID));
@@ -289,6 +337,9 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
         try!(write!(self.output, "trailer\n"));
         try!(write!(self.output, "<<  /Size {}\n", self.object_offsets.len()));
         try!(write!(self.output, "    /Root {} 0 R\n", ROOT_OBJECT_ID));
+        if let Some(id) = document_info_id {
+            try!(write!(self.output, "    /Info {} 0 R\n", id));
+        }
         try!(write!(self.output, ">>\n"));
         try!(write!(self.output, "startxref\n"));
         try!(write!(self.output, "{}\n", startxref));
