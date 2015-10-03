@@ -415,11 +415,13 @@ impl<'a, W: Write> Canvas<'a, W> {
         self.fonts.insert(font, r.clone());
         r
     }
-    pub fn text<F>(&mut self, render_text: F) -> io::Result<()>
-        where F: FnOnce(&mut TextObject<W>) -> io::Result<()> {
+    pub fn text<F, T>(&mut self, render_text: F) -> io::Result<T>
+        where F: FnOnce(&mut TextObject<W>) -> io::Result<T> {
             try!(write!(self.output, "BT\n"));
-            try!(render_text(&mut TextObject { output: self.output }));
-            write!(self.output, "ET\n")
+            let result =
+                try!(render_text(&mut TextObject { output: self.output }));
+            try!(write!(self.output, "ET\n"));
+            Ok(result)
         }
     /// Utility method for placing a string of text.
     pub fn right_text(&mut self, x: f32, y: f32, font: FontSource, size: f32,
