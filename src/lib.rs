@@ -367,6 +367,14 @@ impl<'a, W: Write> Canvas<'a, W> {
         let norm = |c| { c as f32 / 255.0 };
         write!(self.output, "{} {} {} sc\n", norm(r), norm(g), norm(b))
     }
+    /// Set gray level for stroking operations
+    pub fn set_stroke_gray(&mut self, gray: u8) -> io::Result<()> {
+        write!(self.output, "{} G\n", gray as f32 / 255.0)
+    }
+    /// Set gray level for non-stroking operations
+    pub fn set_fill_gray(&mut self, gray: u8) -> io::Result<()> {
+        write!(self.output, "{} g\n", gray as f32 / 255.0)
+    }
     pub fn line(&mut self, x1: f32, y1: f32, x2: f32, y2: f32) -> io::Result<()> {
         try!(self.move_to(x1, y1));
         self.line_to(x2, y2)
@@ -462,6 +470,24 @@ impl<'a, W: Write> TextObject<'a, W> {
     }
     pub fn set_word_spacing(&mut self, a_w: f32) -> io::Result<()> {
         write!(self.output, "{} Tw\n", a_w)
+    }
+    /// Set rgb color for stroking operations
+    pub fn set_stroke_color(&mut self, r: u8, g: u8, b: u8) -> io::Result<()> {
+        let norm = |c| { c as f32 / 255.0 };
+        write!(self.output, "{} {} {} SC\n", norm(r), norm(g), norm(b))
+    }
+    /// Set rgb color for non-stroking operations
+    pub fn set_fill_color(&mut self, r: u8, g: u8, b: u8) -> io::Result<()> {
+        let norm = |c| { c as f32 / 255.0 };
+        write!(self.output, "{} {} {} sc\n", norm(r), norm(g), norm(b))
+    }
+    /// Set gray level for stroking operations
+    pub fn set_stroke_gray(&mut self, gray: u8) -> io::Result<()> {
+        write!(self.output, "{} G\n", gray as f32 / 255.0)
+    }
+    /// Set gray level for non-stroking operations
+    pub fn set_fill_gray(&mut self, gray: u8) -> io::Result<()> {
+        write!(self.output, "{} g\n", gray as f32 / 255.0)
     }
     pub fn pos(&mut self, x: f32, y: f32) -> io::Result<()> {
         write!(self.output, "{} {} Td\n", x, y)
