@@ -18,11 +18,15 @@ mod encoding;
 pub use ::encoding::Encoding;
 pub use ::encoding::WIN_ANSI_ENCODING;
 
+mod outline;
+pub use ::outline::OutlineItem;
+
 /// The top-level object for writing a PDF.
 pub struct Pdf<'a, W: 'a + Write + Seek> {
     output: &'a mut W,
     object_offsets: Vec<i64>,
     page_objects_ids: Vec<usize>,
+    outline_items: Vec<OutlineItem>,
     document_info: BTreeMap<String, String>
 }
 
@@ -150,7 +154,8 @@ impl fmt::Display for FontRef {
 
 pub struct Canvas<'a, W: 'a + Write> {
     output: &'a mut W,
-    fonts: &'a mut HashMap<FontSource, FontRef>
+    fonts: &'a mut HashMap<FontSource, FontRef>,
+    outline_items: &'a mut Vec<OutlineItem>
 }
 
 pub struct TextObject<'a, W: 'a + Write> {
@@ -172,6 +177,7 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
             // We reserve IDs 1 and 2 for the catalog and page tree.
             object_offsets: vec![-1, -1, -1],
             page_objects_ids: vec![],
+            outline_items: Vec::new(),
             document_info: BTreeMap::new(),
         })
     }
@@ -215,7 +221,7 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
     /// `render_contents` by applying drawing methods on the Canvas.
     pub fn render_page<F>(&mut self, width: f32, height: f32, render_contents: F) -> io::Result<()>
     where F: FnOnce(&mut Canvas<W>) -> io::Result<()> {
-        let (contents_object_id, content_length, fonts) =
+        let (contents_object_id, content_length, fonts, outline_items) =
         try!(self.write_new_object(move |contents_object_id, pdf| {
             // Guess the ID of the next object. (We’ll assert it below.)
             try!(write!(pdf.output, "<<  /Length {} 0 R\n", contents_object_id + 1));
@@ -225,12 +231,15 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
             let start = try!(pdf.tell());
             try!(write!(pdf.output, "/DeviceRGB cs /DeviceRGB CS\n"));
             let mut fonts : HashMap<FontSource, FontRef> = HashMap::new();
-            try!(render_contents(&mut Canvas { output: pdf.output,
-                                               fonts: &mut fonts }));
+            let mut outline_items: Vec<OutlineItem> = Vec::new();
+            try!(render_contents(&mut Canvas {
+                output: pdf.output,
+                fonts: &mut fonts,
+                outline_items: &mut outline_items}));
             let end = try!(pdf.tell());
 
             try!(write!(pdf.output, "endstream\n"));
-            Ok((contents_object_id, end - start, fonts))
+            Ok((contents_object_id, end - start, fonts, outline_items))
         }));
         try!(self.write_new_object(|length_object_id, pdf| {
             assert!(length_object_id == contents_object_id + 1);
@@ -242,7 +251,6 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
             let object_id = try!(src.write_object(self));
             font_object_ids.insert(r.clone(), object_id);
         }
-
         let page_object_id = try!(self.write_new_object(|page_object_id, pdf| {
             try!(write!(pdf.output, "<<  /Type /Page\n"));
             try!(write!(pdf.output, "    /Parent {} 0 R\n", PAGES_OBJECT_ID));
@@ -256,6 +264,13 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
             try!(write!(pdf.output, ">>\n"));
             Ok(page_object_id)
         }));
+        // Take the outline_items from this page, mark them with the page ref,
+        // and save them for the document outline.
+        for i in &outline_items {
+            let mut item = i.clone();
+            item.set_page(page_object_id);
+            self.outline_items.push(item);
+        }
         self.page_objects_ids.push(page_object_id);
         Ok(())
     }
@@ -318,9 +333,48 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
                     Ok(Some(page_object_id))
                 }))
             } else { None };
+
+        let outlines_id =
+            if !self.outline_items.is_empty() {
+                let parent_id = self.object_offsets.len();
+                self.object_offsets.push(-1);
+                let count = self.outline_items.len();
+                let mut first_id = 0;
+                let mut last_id = 0;
+                let items = self.outline_items.clone();
+                for (i, item) in items.iter().enumerate() {
+                    let (is_first, is_last) = (i == 0, i == count -1);
+                    let id = try!(self.write_new_object(|object_id, pdf| {
+                        item.write_dictionary(
+                            pdf.output, parent_id,
+                            if is_first {None} else {Some(object_id-1)},
+                            if is_last {None} else {Some(object_id+1)})
+                            .and(Ok(object_id))}));
+                    if is_first {
+                        first_id = id;
+                    }
+                    if is_last {
+                        last_id = id;
+                    }
+                }
+                try!(self.write_object_with_id(parent_id, |pdf| {
+                    try!(write!(pdf.output, "<< /Type /Outlines\n"));
+                    try!(write!(pdf.output, "/First {} 0 R\n", first_id));
+                    try!(write!(pdf.output, "/Last {} 0 R\n", last_id));
+                    try!(write!(pdf.output, "/Count {}\n", count));
+                    write!(pdf.output, ">>\n")
+                }));
+                Some(parent_id)
+            } else {
+                None
+            };
+
         try!(self.write_object_with_id(ROOT_OBJECT_ID, |pdf| {
             try!(write!(pdf.output, "<<  /Type /Catalog\n"));
             try!(write!(pdf.output, "    /Pages {} 0 R\n", PAGES_OBJECT_ID));
+            if let Some(outlines_id) = outlines_id {
+                try!(write!(pdf.output, "/Outlines {} 0 R\n", outlines_id));
+            }
             try!(write!(pdf.output, ">>\n"));
             Ok(())
         }));
@@ -452,6 +506,9 @@ impl<'a, W: Write> Canvas<'a, W> {
             try!(t.pos(x - text_width / 2.0, y));
             t.show(text)
         })
+    }
+    pub fn add_outline(&mut self, title: &str) {
+        self.outline_items.push(OutlineItem::new(title));
     }
 }
 
