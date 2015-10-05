@@ -139,6 +139,12 @@ impl FontSource {
     }
 }
 
+/// A font ready to be used in a TextObject.
+///
+/// The way to get FontRef is to call `Canvas::get_font` with a
+/// `FontSource`.  In PDF terms, a FontSource is a font dictionary,
+/// and a FontRef is a name registered with a font source in the page
+/// resources, like /F1.
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct FontRef {
     n: usize,
@@ -146,13 +152,14 @@ pub struct FontRef {
 }
 
 impl FontRef {
-    /// Get the width of a string in this font at given size.
+    /// Get the width of the given text in this font at given size.
     pub fn get_width(&self, size: f32, text: &str) -> f32 {
         size * self.get_width_raw(text) as f32 / 1000.0
     }
 
-    /// Get the width of a string in thousands of unit of text space.
-    /// This unit is what is used in some places internally in pdf files.
+    /// Get the width of the given text in thousands of unit of text
+    /// space.  This unit is what is used in some places internally in
+    /// pdf files and in some methods on a `TextObject`.
     pub fn get_width_raw(&self, text: &str) -> u32 {
         let mut result = 0;
         for char in WIN_ANSI_ENCODING.encode_string(text) {
@@ -178,6 +185,7 @@ pub struct Canvas<'a> {
     outline_items: &'a mut Vec<OutlineItem>
 }
 
+/// A text object is where text is put on the canvas.
 pub struct TextObject<'a> {
     output: &'a mut Write,
 }
@@ -552,18 +560,29 @@ impl<'a> Canvas<'a> {
 }
 
 impl<'a> TextObject<'a> {
+    /// Set the font and font-size to be used by the following text
+    /// operations.
     pub fn set_font(&mut self, font: &FontRef, size: f32) -> io::Result<()> {
         write!(self.output, "{} {} Tf\n", font, size)
     }
+    /// Set leading, the vertical distance from a line of text to the next.
+    /// This is important for the `show_line` method.
     pub fn set_leading(&mut self, leading: f32) -> io::Result<()> {
         write!(self.output, "{} TL\n", leading)
     }
+    /// Set the rise above the baseline for coming text.  Calling
+    /// set_rise again with a zero argument will get back to the old
+    /// baseline.
     pub fn set_rise(&mut self, rise: f32) -> io::Result<()> {
         write!(self.output, "{} Ts\n", rise)
     }
+    /// Set the amount of extra space between characters, in 1/1000
+    /// text unit.
     pub fn set_char_spacing(&mut self, a_c: f32) -> io::Result<()> {
         write!(self.output, "{} Tc\n", a_c)
     }
+    /// Set the amount of extra space between words, in 1/1000
+    /// text unit.
     pub fn set_word_spacing(&mut self, a_w: f32) -> io::Result<()> {
         write!(self.output, "{} Tw\n", a_w)
     }
@@ -585,9 +604,14 @@ impl<'a> TextObject<'a> {
     pub fn set_fill_gray(&mut self, gray: u8) -> io::Result<()> {
         write!(self.output, "{} g\n", gray as f32 / 255.0)
     }
+    /// Move text position.  The first time `pos` is called in a
+    /// TextObject, (x, y) refers to the same point as for
+    /// `Canvas::move_to`, after that, the point is relative to the
+    /// earlier pos.
     pub fn pos(&mut self, x: f32, y: f32) -> io::Result<()> {
         write!(self.output, "{} {} Td\n", x, y)
     }
+    /// Show a text.
     pub fn show(&mut self, text: &str) -> io::Result<()> {
         try!(self.output.write_all(b"("));
         try!(self.output.write_all(&WIN_ANSI_ENCODING.encode_string(text)));
@@ -601,15 +625,18 @@ impl<'a> TextObject<'a> {
         try!(self.output.write_all(&WIN_ANSI_ENCODING.encode_string(text)));
         write!(self.output, ") {}] TJ\n", offset)
     }
+    /// Show a text as a line.  See also `set_leading`.
     pub fn show_line(&mut self, text: &str) -> io::Result<()> {
         try!(self.output.write_all(b"("));
         try!(self.output.write_all(&WIN_ANSI_ENCODING.encode_string(text)));
         try!(self.output.write_all(b") '\n"));
         Ok(())
     }
+    /// Push the graphics state on a stack.
     pub fn gsave(&mut self) -> io::Result<()> {
         write!(self.output, "q\n")
     }
+    /// Pop a graphics state from the `gsave` stack and restore it.
     pub fn grestore(&mut self) -> io::Result<()> {
         write!(self.output, "Q\n")
     }
