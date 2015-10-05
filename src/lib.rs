@@ -168,6 +168,10 @@ impl fmt::Display for FontRef {
     }
 }
 
+/// An visual area where content can be drawn (a page).
+///
+/// Provides methods for defining and stroking or filling paths, as
+/// well as placing text objects.
 pub struct Canvas<'a> {
     output: &'a mut Write,
     fonts: &'a mut HashMap<FontSource, FontRef>,
@@ -419,6 +423,8 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
 }
 
 impl<'a> Canvas<'a> {
+    /// Append a closed rectangle with a corern at (x, y) and
+    /// extending width × height to the to the current path.
     pub fn rectangle(&mut self, x: f32, y: f32, width: f32, height: f32)
                      -> io::Result<()> {
         write!(self.output, "{} {} {} {} re\n", x, y, width, height)
@@ -445,22 +451,30 @@ impl<'a> Canvas<'a> {
     pub fn set_fill_gray(&mut self, gray: u8) -> io::Result<()> {
         write!(self.output, "{} g\n", gray as f32 / 255.0)
     }
-    pub fn line(&mut self, x1: f32, y1: f32, x2: f32, y2: f32) -> io::Result<()> {
+    /// Append a straight line from (x1, y1) to (x2, y2) to the current path.
+    pub fn line(&mut self, x1: f32, y1: f32, x2: f32, y2: f32)
+                -> io::Result<()> {
         try!(self.move_to(x1, y1));
         self.line_to(x2, y2)
     }
+    /// Begin a new subpath at the point (x, y).
     pub fn move_to(&mut self, x: f32, y: f32) -> io::Result<()> {
         write!(self.output, "{} {} m ", x, y)
     }
+    /// Add a straight line from the current point to (x, y) to the
+    /// current path.
     pub fn line_to(&mut self, x: f32, y: f32) -> io::Result<()> {
         write!(self.output, "{} {} l ", x, y)
     }
-    pub fn arc_to(&mut self, x1: f32, y1: f32, x2: f32, y2: f32, x3: f32, y3: f32)
-                  -> io::Result<()> {
+    /// Add an Bézier curve from the current point to (x3, y3) with
+    /// (x1, y1) and (x2, y2) as Bézier controll points.
+    pub fn curve_to(&mut self, x1: f32, y1: f32, x2: f32, y2: f32,
+                    x3: f32, y3: f32) -> io::Result<()> {
         write!(self.output, "{} {} {} {} {} {} c\n", x1, y1, x2, y2, x3, y3)
     }
-    /// A circle approximated by four cubic Bézier curves.
-    /// Based on http://spencermortensen.com/articles/bezier-circle/
+    /// Add a circle approximated by four cubic Bézier curves to the
+    /// current path.  Based on
+    /// http://spencermortensen.com/articles/bezier-circle/
     pub fn circle(&mut self, x: f32, y: f32, r: f32) -> io::Result<()> {
         let t = y - r;
         let b = y + r;
@@ -472,18 +486,21 @@ impl<'a> Canvas<'a> {
         let tp = y - (r * c);
         let bp = y + (r * c);
         try!(self.move_to(x, t));
-        try!(self.arc_to(leftp, t, left, tp, left, y));
-        try!(self.arc_to(left, bp, leftp, b, x, b));
-        try!(self.arc_to(rightp, b, right, bp, right, y));
-        try!(self.arc_to(right, tp, rightp, t, x, t));
+        try!(self.curve_to(leftp, t, left, tp, left, y));
+        try!(self.curve_to(left, bp, leftp, b, x, b));
+        try!(self.curve_to(rightp, b, right, bp, right, y));
+        try!(self.curve_to(right, tp, rightp, t, x, t));
         Ok(())
     }
+    /// Stroke the current path.
     pub fn stroke(&mut self) -> io::Result<()> {
         write!(self.output, "s\n")
     }
+    /// Fill the current path.
     pub fn fill(&mut self) -> io::Result<()> {
         write!(self.output, "f\n")
     }
+    /// Get a FontRef for a specific font.
     pub fn get_font(&mut self, font: FontSource) -> FontRef {
         if let Some(r) = self.fonts.get(&font) {
             return r.clone();
@@ -493,6 +510,11 @@ impl<'a> Canvas<'a> {
         self.fonts.insert(font, r.clone());
         r
     }
+    /// Create a text object.
+    ///
+    /// The contents of the text object is defined by the function
+    /// render_text, by applying methods to the TextObject it gets as
+    /// an argument.
     pub fn text<F, T>(&mut self, render_text: F) -> io::Result<T>
         where F: FnOnce(&mut TextObject) -> io::Result<T> {
             try!(write!(self.output, "BT\n"));
