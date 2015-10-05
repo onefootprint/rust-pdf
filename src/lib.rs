@@ -168,14 +168,14 @@ impl fmt::Display for FontRef {
     }
 }
 
-pub struct Canvas<'a, W: 'a + Write> {
-    output: &'a mut W,
+pub struct Canvas<'a> {
+    output: &'a mut Write,
     fonts: &'a mut HashMap<FontSource, FontRef>,
     outline_items: &'a mut Vec<OutlineItem>
 }
 
-pub struct TextObject<'a, W: 'a + Write> {
-    output: &'a mut W,
+pub struct TextObject<'a> {
+    output: &'a mut Write,
 }
 
 const ROOT_OBJECT_ID: usize = 1;
@@ -236,7 +236,7 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
     /// actual content of the page will be created by the function
     /// `render_contents` by applying drawing methods on the Canvas.
     pub fn render_page<F>(&mut self, width: f32, height: f32, render_contents: F) -> io::Result<()>
-    where F: FnOnce(&mut Canvas<W>) -> io::Result<()> {
+    where F: FnOnce(&mut Canvas) -> io::Result<()> {
         let (contents_object_id, content_length, fonts, outline_items) =
         try!(self.write_new_object(move |contents_object_id, pdf| {
             // Guess the ID of the next object. (We’ll assert it below.)
@@ -418,7 +418,7 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
     }
 }
 
-impl<'a, W: Write> Canvas<'a, W> {
+impl<'a> Canvas<'a> {
     pub fn rectangle(&mut self, x: f32, y: f32, width: f32, height: f32)
                      -> io::Result<()> {
         write!(self.output, "{} {} {} {} re\n", x, y, width, height)
@@ -494,7 +494,7 @@ impl<'a, W: Write> Canvas<'a, W> {
         r
     }
     pub fn text<F, T>(&mut self, render_text: F) -> io::Result<T>
-        where F: FnOnce(&mut TextObject<W>) -> io::Result<T> {
+        where F: FnOnce(&mut TextObject) -> io::Result<T> {
             try!(write!(self.output, "BT\n"));
             let result =
                 try!(render_text(&mut TextObject { output: self.output }));
@@ -529,7 +529,7 @@ impl<'a, W: Write> Canvas<'a, W> {
     }
 }
 
-impl<'a, W: Write> TextObject<'a, W> {
+impl<'a> TextObject<'a> {
     pub fn set_font(&mut self, font: &FontRef, size: f32) -> io::Result<()> {
         write!(self.output, "{} {} Tf\n", font, size)
     }
