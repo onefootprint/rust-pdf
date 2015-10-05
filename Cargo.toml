@@ -1,11 +1,11 @@
 [package]
 name = "pdf"
-version = "0.1.5"
+version = "0.2.0"
 authors = ["Simon Sapin <simon.sapin@exyr.org>",
 	   "Rasmus Kaj <rasmus@krats.se>"]
 license = "MIT"
 description = "Generating PDF files in pure Rust."
-documentation = "http://rasmus.krats.se/doc/pdf/0.1.5/pdf/"
+documentation = "http://rasmus.krats.se/doc/pdf/0.2.0/pdf/"
 repository = "https://github.com/kaj/rust-pdf"
 readme = "README.md"
 
