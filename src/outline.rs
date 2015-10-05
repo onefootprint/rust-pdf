@@ -2,7 +2,15 @@ use std::io::{Write, self};
 
 pub use ::encoding::WIN_ANSI_ENCODING;
 
-
+/// An item in the document outline.
+///
+/// An OutlineItem associates a name (contained in an ordered tree)
+/// With a location in the document.  The PDF standard supports
+/// several ways to specify an exact location on a page, but this
+/// implementation currently only supports linking to a specific page.
+///
+/// To actually create an OutlineItem in a meaningful way, please
+/// use `Canvas::add_outline`.
 #[derive(Clone)]
 pub struct OutlineItem {
     title: String,

@@ -1,3 +1,19 @@
+//! A library for creating pdf files.
+
+//! # Example
+//! ````no_run
+//! use std::fs::File;
+//! use pdf::{Pdf, FontSource};
+//!
+//! let mut file = File::create("foo.pdf").unwrap();
+//! let mut document = Pdf::new(&mut file).unwrap();
+//! let font = FontSource::Times_Roman;
+//!
+//! document.render_page(180.0, 240.0, |canvas| {
+//!     canvas.center_text(90.0, 200.0, font, 24.0, "Hello World!")
+//! });
+//! ````
+
 #[macro_use]
 extern crate lazy_static;
 
@@ -507,6 +523,7 @@ impl<'a, W: Write> Canvas<'a, W> {
             t.show(text)
         })
     }
+    /// Add an item for this page in the document outline.
     pub fn add_outline(&mut self, title: &str) {
         self.outline_items.push(OutlineItem::new(title));
     }
