@@ -42,6 +42,7 @@ pub struct Pdf<'a, W: 'a + Write + Seek> {
     output: &'a mut W,
     object_offsets: Vec<i64>,
     page_objects_ids: Vec<usize>,
+    all_font_object_ids: HashMap<FontSource, usize>,
     outline_items: Vec<OutlineItem>,
     document_info: BTreeMap<String, String>
 }
@@ -50,7 +51,7 @@ pub struct Pdf<'a, W: 'a + Write + Seek> {
 /// Underscores in these names are hyphens in the real names.
 /// TODO Add a way to handle other fonts.
 #[allow(non_camel_case_types)]
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub enum FontSource {
     Courier,
     Courier_Bold,
@@ -205,6 +206,7 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
             // We reserve IDs 1 and 2 for the catalog and page tree.
             object_offsets: vec![-1, -1, -1],
             page_objects_ids: vec![],
+            all_font_object_ids: HashMap::new(),
             outline_items: Vec::new(),
             document_info: BTreeMap::new(),
         })
@@ -276,8 +278,13 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
 
         let mut font_object_ids : HashMap<FontRef, usize> = HashMap::new();
         for (src, r) in &fonts {
-            let object_id = try!(src.write_object(self));
-            font_object_ids.insert(r.clone(), object_id);
+            if let Some(&object_id) = self.all_font_object_ids.get(&src) {
+                font_object_ids.insert(r.clone(), object_id);
+            } else {
+                let object_id = try!(src.write_object(self));
+                font_object_ids.insert(r.clone(), object_id);
+                self.all_font_object_ids.insert(src.clone(), object_id);
+           }
         }
         let page_object_id = try!(self.write_new_object(|page_object_id, pdf| {
             try!(write!(pdf.output, "<<  /Type /Page\n"));
