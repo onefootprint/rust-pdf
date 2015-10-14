@@ -504,6 +504,16 @@ impl<'a> Canvas<'a> {
             Ok(result)
         }
     /// Utility method for placing a string of text.
+    pub fn left_text(&mut self, x: f32, y: f32, font: FontSource, size: f32,
+                      text: &str) -> io::Result<()> {
+        let font = self.get_font(font);
+        self.text(|t| {
+            try!(t.set_font(&font, size));
+            try!(t.pos(x, y));
+            t.show(text)
+        })
+    }
+    /// Utility method for placing a string of text.
     pub fn right_text(&mut self, x: f32, y: f32, font: FontSource, size: f32,
                       text: &str) -> io::Result<()> {
         let font = self.get_font(font);
@@ -517,9 +527,9 @@ impl<'a> Canvas<'a> {
     /// Utility method for placing a string of text.
     pub fn center_text(&mut self, x: f32, y: f32, font: FontSource, size: f32,
                        text: &str) -> io::Result<()> {
-        let text_width = font.get_width(size, text);
         let font = self.get_font(font);
         self.text(|t| {
+            let text_width = font.get_width(size, text);
             try!(t.set_font(&font, size));
             try!(t.pos(x - text_width / 2.0, y));
             t.show(text)
