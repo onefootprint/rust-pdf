@@ -56,7 +56,7 @@ pub struct Pdf<'a, W: 'a + Write + Seek> {
 /// Underscores in these names are hyphens in the real names.
 /// TODO Add a way to handle other fonts.
 #[allow(non_camel_case_types)]
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 pub enum FontSource {
     Courier,
     Courier_Bold,

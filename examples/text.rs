@@ -12,20 +12,11 @@ fn main() {
         try!(c.line(10.0, 300.0, 290.0, 300.0));
         try!(c.line(150.0, 10.0, 150.0, 390.0));
         try!(c.stroke());
-        let helvetica = c.get_font(FontSource::Helvetica);
-        try!(c.text(|t| {
-            try!(t.set_font(&helvetica, 12.0));
-            try!(t.pos(10.0, 380.0));
-            t.show("Top left")
-        }));
-        try!(c.text(|t| {
-            try!(t.pos(10.0, 10.0));
-            t.show("Bottom left")
-        }));
-        try!(c.right_text(290.0, 380.0, FontSource::Helvetica, 12.0,
-                          "Top right"));
-        try!(c.right_text(290.0, 10.0, FontSource::Helvetica, 12.0,
-                          "Bottom right"));
+        let helvetica = FontSource::Helvetica;
+        try!(c.left_text(10.0, 380.0, helvetica, 12.0, "Top left"));
+        try!(c.left_text(10.0,  10.0, helvetica, 12.0, "Bottom left"));
+        try!(c.right_text(290.0, 380.0, helvetica, 12.0, "Top right"));
+        try!(c.right_text(290.0,  10.0, helvetica, 12.0, "Bottom right"));
         try!(c.center_text(150.0, 330.0, FontSource::Times_Bold, 18.0,
                            "Centered"));
         let times = c.get_font(FontSource::Times_Roman);
