@@ -22,15 +22,15 @@ extern crate time;
 use std::io::{Seek, SeekFrom, Write, self};
 use std::collections::HashMap;
 use std::collections::BTreeMap;
-use std::fs::File;
-use std::sync::Arc;
+
+mod fontsource;
+pub use ::fontsource::FontSource;
 
 mod fontref;
 pub use ::fontref::FontRef;
 
 mod fontmetrics;
 pub use ::fontmetrics::FontMetrics;
-use ::fontmetrics::get_builtin_metrics;
 
 mod encoding;
 pub use ::encoding::Encoding;
@@ -38,6 +38,9 @@ pub use ::encoding::WIN_ANSI_ENCODING;
 
 mod outline;
 pub use ::outline::OutlineItem;
+
+mod canvas;
+pub use ::canvas::Canvas;
 
 mod textobject;
 pub use textobject::TextObject;
@@ -50,110 +53,6 @@ pub struct Pdf<'a, W: 'a + Write + Seek> {
     all_font_object_ids: HashMap<FontSource, usize>,
     outline_items: Vec<OutlineItem>,
     document_info: BTreeMap<String, String>
-}
-
-/// The "Base14" built-in fonts in PDF.
-/// Underscores in these names are hyphens in the real names.
-/// TODO Add a way to handle other fonts.
-#[allow(non_camel_case_types)]
-#[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
-pub enum FontSource {
-    Courier,
-    Courier_Bold,
-    Courier_Oblique,
-    Courier_BoldOblique,
-    Helvetica,
-    Helvetica_Bold,
-    Helvetica_Oblique,
-    Helvetica_BoldOblique,
-    Times_Roman,
-    Times_Bold,
-    Times_Italic,
-    Times_BoldItalic,
-    Symbol,
-    ZapfDingbats
-}
-
-impl FontSource {
-    fn write_object<'a, W: 'a + Write + Seek>(&self, pdf: &mut Pdf<'a, W>) -> io::Result<usize> {
-        // Note: This is enough for a Base14 font, other fonts will
-        // require a stream for the actual font, and probably another
-        // object for metrics etc
-        pdf.write_new_object(|font_object_id, pdf| {
-            try!(write!(pdf.output,
-                        "<< /Type /Font /Subtype /Type1 /BaseFont /{} /Encoding /WinAnsiEncoding >>\n",
-                        self.pdf_name()));
-            Ok(font_object_id)
-        })
-    }
-
-    /// Get the PDF name of this font.
-    /// # Examples
-    /// ```
-    /// use pdf::FontSource;
-    /// assert_eq!("Times-Roman", FontSource::Times_Roman.pdf_name());
-    /// ```
-    pub fn pdf_name(&self) -> String {
-        format!("{:?}", self).replace("_", "-")
-    }
-
-    /// Get the width of a string in this font at given size.
-    ///
-    /// # Examples
-    /// ```
-    /// use pdf::FontSource;
-    /// assert_eq!(62.004, FontSource::Helvetica.get_width(12.0, "Hello World"));
-    /// assert_eq!(60.0, FontSource::Courier.get_width(10.0, "0123456789"));
-    /// ```
-    pub fn get_width(&self, size: f32, text: &str) -> f32 {
-        size * self.get_width_raw(text) as f32 / 1000.0
-    }
-
-    /// Get the width of a string in thousands of unit of text space.
-    /// This unit is what is used in some places internally in pdf files.
-    ///
-    /// # Examples
-    /// ```
-    /// use pdf::FontSource;
-    /// assert_eq!(5167, FontSource::Helvetica.get_width_raw("Hello World"));
-    /// assert_eq!(600, FontSource::Courier.get_width_raw("A"));
-    /// ```
-    pub fn get_width_raw(&self, text: &str) -> u32 {
-        if let Ok(metrics) = self.get_metrics() {
-            let mut result = 0;
-            for char in WIN_ANSI_ENCODING.encode_string(text) {
-                result += metrics.get_width(char).unwrap_or(100) as u32;
-            }
-            result
-        } else {
-            0
-        }
-    }
-
-    /// Get the font metrics for font.
-    pub fn get_metrics(&self) -> io::Result<FontMetrics> {
-        if let Some(result) = get_builtin_metrics(&self.pdf_name()) {
-            return Ok(result);
-        }
-        // TODO Non-builtin metrics wont be found here, use some search path.
-        let filename = format!("data/{}.afm", self.pdf_name());
-        println!("Reading metrics {}", filename);
-        match File::open(&filename) {
-            Ok(file) => FontMetrics::parse(file),
-            Err(e) => Err(e)
-        }
-    }
-}
-
-
-/// An visual area where content can be drawn (a page).
-///
-/// Provides methods for defining and stroking or filling paths, as
-/// well as placing text objects.
-pub struct Canvas<'a> {
-    output: &'a mut Write,
-    fonts: &'a mut HashMap<FontSource, FontRef>,
-    outline_items: &'a mut Vec<OutlineItem>
 }
 
 const ROOT_OBJECT_ID: usize = 1;
@@ -227,10 +126,8 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
             try!(write!(pdf.output, "/DeviceRGB cs /DeviceRGB CS\n"));
             let mut fonts : HashMap<FontSource, FontRef> = HashMap::new();
             let mut outline_items: Vec<OutlineItem> = Vec::new();
-            try!(render_contents(&mut Canvas {
-                output: pdf.output,
-                fonts: &mut fonts,
-                outline_items: &mut outline_items}));
+            try!(render_contents(&mut Canvas::new(pdf.output, &mut fonts,
+                                                  &mut outline_items)));
             let end = try!(pdf.tell());
 
             try!(write!(pdf.output, "endstream\n"));
@@ -399,145 +296,6 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
         try!(write!(self.output, "{}\n", startxref));
         try!(write!(self.output, "%%EOF\n"));
         Ok(())
-    }
-}
-
-impl<'a> Canvas<'a> {
-    /// Append a closed rectangle with a corern at (x, y) and
-    /// extending width × height to the to the current path.
-    pub fn rectangle(&mut self, x: f32, y: f32, width: f32, height: f32)
-                     -> io::Result<()> {
-        write!(self.output, "{} {} {} {} re\n", x, y, width, height)
-    }
-    /// Set the line width in the graphics state
-    pub fn set_line_width(&mut self, w: f32) -> io::Result<()> {
-        write!(self.output, "{} w\n", w)
-    }
-    /// Set rgb color for stroking operations
-    pub fn set_stroke_color(&mut self, r: u8, g: u8, b: u8) -> io::Result<()> {
-        let norm = |c| { c as f32 / 255.0 };
-        write!(self.output, "{} {} {} SC\n", norm(r), norm(g), norm(b))
-    }
-    /// Set rgb color for non-stroking operations
-    pub fn set_fill_color(&mut self, r: u8, g: u8, b: u8) -> io::Result<()> {
-        let norm = |c| { c as f32 / 255.0 };
-        write!(self.output, "{} {} {} sc\n", norm(r), norm(g), norm(b))
-    }
-    /// Set gray level for stroking operations
-    pub fn set_stroke_gray(&mut self, gray: u8) -> io::Result<()> {
-        write!(self.output, "{} G\n", gray as f32 / 255.0)
-    }
-    /// Set gray level for non-stroking operations
-    pub fn set_fill_gray(&mut self, gray: u8) -> io::Result<()> {
-        write!(self.output, "{} g\n", gray as f32 / 255.0)
-    }
-    /// Append a straight line from (x1, y1) to (x2, y2) to the current path.
-    pub fn line(&mut self, x1: f32, y1: f32, x2: f32, y2: f32)
-                -> io::Result<()> {
-        try!(self.move_to(x1, y1));
-        self.line_to(x2, y2)
-    }
-    /// Begin a new subpath at the point (x, y).
-    pub fn move_to(&mut self, x: f32, y: f32) -> io::Result<()> {
-        write!(self.output, "{} {} m ", x, y)
-    }
-    /// Add a straight line from the current point to (x, y) to the
-    /// current path.
-    pub fn line_to(&mut self, x: f32, y: f32) -> io::Result<()> {
-        write!(self.output, "{} {} l ", x, y)
-    }
-    /// Add an Bézier curve from the current point to (x3, y3) with
-    /// (x1, y1) and (x2, y2) as Bézier controll points.
-    pub fn curve_to(&mut self, x1: f32, y1: f32, x2: f32, y2: f32,
-                    x3: f32, y3: f32) -> io::Result<()> {
-        write!(self.output, "{} {} {} {} {} {} c\n", x1, y1, x2, y2, x3, y3)
-    }
-    /// Add a circle approximated by four cubic Bézier curves to the
-    /// current path.  Based on
-    /// http://spencermortensen.com/articles/bezier-circle/
-    pub fn circle(&mut self, x: f32, y: f32, r: f32) -> io::Result<()> {
-        let t = y - r;
-        let b = y + r;
-        let left = x - r;
-        let right = x + r;
-        let c = 0.551915024494;
-        let leftp = x - (r * c);
-        let rightp = x + (r * c);
-        let tp = y - (r * c);
-        let bp = y + (r * c);
-        try!(self.move_to(x, t));
-        try!(self.curve_to(leftp, t, left, tp, left, y));
-        try!(self.curve_to(left, bp, leftp, b, x, b));
-        try!(self.curve_to(rightp, b, right, bp, right, y));
-        try!(self.curve_to(right, tp, rightp, t, x, t));
-        Ok(())
-    }
-    /// Stroke the current path.
-    pub fn stroke(&mut self) -> io::Result<()> {
-        write!(self.output, "s\n")
-    }
-    /// Fill the current path.
-    pub fn fill(&mut self) -> io::Result<()> {
-        write!(self.output, "f\n")
-    }
-    /// Get a FontRef for a specific font.
-    pub fn get_font(&mut self, font: FontSource) -> FontRef {
-        if let Some(r) = self.fonts.get(&font) {
-            return r.clone();
-        }
-        let n = self.fonts.len();
-        let r = FontRef::new(n, Arc::new(font.get_metrics().unwrap()));
-        self.fonts.insert(font, r.clone());
-        r
-    }
-    /// Create a text object.
-    ///
-    /// The contents of the text object is defined by the function
-    /// render_text, by applying methods to the TextObject it gets as
-    /// an argument.
-    pub fn text<F, T>(&mut self, render_text: F) -> io::Result<T>
-        where F: FnOnce(&mut TextObject) -> io::Result<T> {
-            try!(write!(self.output, "BT\n"));
-            let result =
-                try!(render_text(&mut TextObject::new(self.output)));
-            try!(write!(self.output, "ET\n"));
-            Ok(result)
-        }
-    /// Utility method for placing a string of text.
-    pub fn left_text(&mut self, x: f32, y: f32, font: FontSource, size: f32,
-                      text: &str) -> io::Result<()> {
-        let font = self.get_font(font);
-        self.text(|t| {
-            try!(t.set_font(&font, size));
-            try!(t.pos(x, y));
-            t.show(text)
-        })
-    }
-    /// Utility method for placing a string of text.
-    pub fn right_text(&mut self, x: f32, y: f32, font: FontSource, size: f32,
-                      text: &str) -> io::Result<()> {
-        let font = self.get_font(font);
-        self.text(|t| {
-            let text_width = font.get_width(size, text);
-            try!(t.set_font(&font, size));
-            try!(t.pos(x - text_width, y));
-            t.show(text)
-        })
-    }
-    /// Utility method for placing a string of text.
-    pub fn center_text(&mut self, x: f32, y: f32, font: FontSource, size: f32,
-                       text: &str) -> io::Result<()> {
-        let font = self.get_font(font);
-        self.text(|t| {
-            let text_width = font.get_width(size, text);
-            try!(t.set_font(&font, size));
-            try!(t.pos(x - text_width / 2.0, y));
-            t.show(text)
-        })
-    }
-    /// Add an item for this page in the document outline.
-    pub fn add_outline(&mut self, title: &str) {
-        self.outline_items.push(OutlineItem::new(title));
     }
 }
 
