@@ -85,8 +85,8 @@ impl FontSource {
 
     /// Get the font metrics for font.
     pub fn get_metrics(&self) -> io::Result<FontMetrics> {
-        if let Some(result) = get_builtin_metrics(&self.pdf_name()) {
-            return Ok(result);
+        if let Some(result) = get_builtin_metrics(&self) {
+            return Ok(result.clone());
         }
         // TODO Non-builtin metrics wont be found here, use some search path.
         let filename = format!("data/{}.afm", self.pdf_name());

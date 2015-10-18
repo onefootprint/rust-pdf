@@ -1,7 +1,9 @@
-use std::io;
 use std::collections::BTreeMap;
 use std::fs::File;
-use std::io::BufRead;
+use std::io::{self, BufRead};
+use std::ops::Deref;
+
+use ::fontsource::FontSource;
 
 /// Relevant data that can be loaded from an AFM (Adobe Font Metrics) file.
 /// A FontMetrics object is specific to a given encoding (WinAnsiEncoding

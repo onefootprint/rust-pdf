@@ -10,8 +10,9 @@ mod encoding;
 use ::encoding::WIN_ANSI_ENCODING;
 
 fn write_cond(f: &mut File, name: &str, data: &str) -> Result<()> {
-    try!(writeln!(f, "  if name == \"{}\" {{", name));
-    try!(writeln!(f, "    let mut widths : BTreeMap<u8, u16> = BTreeMap::new();"));
+    try!(writeln!(f, "  static ref METRICS_{}: FontMetrics = {{",
+                  name.to_uppercase()));
+    try!(writeln!(f, "    let mut widths = BTreeMap::new();"));
     for line in data.lines() {
         let words : Vec<&str> = line.split_whitespace().collect();
         if words[0] == "C" && words[3] == "WX" && words[6] == "N" {
@@ -21,43 +22,60 @@ fn write_cond(f: &mut File, name: &str, data: &str) -> Result<()> {
             }
         }
     }
-    try!(writeln!(f, "    return Some(FontMetrics{{ widths: widths }})"));
-    try!(writeln!(f, "  }}"));
+    try!(writeln!(f, "    FontMetrics{{ widths: widths }}"));
+    try!(writeln!(f, "  }};"));
     Ok(())
 }
 
 fn main() {
     let dst = Path::new(&env::var("OUT_DIR").unwrap()).join("metrics_data.rs");
     let mut f = &mut File::create(&dst).unwrap();
-    writeln!(f, "pub fn get_builtin_metrics(name: &str) -> Option<FontMetrics> {{").unwrap();
+    let fonts = vec!("Courier", "Courier_Bold",
+                     "Courier_Oblique",
+                     "Courier_BoldOblique", "Helvetica",
+                     "Helvetica_Bold", "Helvetica_Oblique",
+                     "Helvetica_BoldOblique", "Times_Roman",
+                     "Times_Bold", "Times_Italic",
+                     "Times_BoldItalic", "Symbol",
+                     "ZapfDingbats");
+    writeln!(f, "pub fn get_builtin_metrics(font: &FontSource)").unwrap();
+    writeln!(f, "-> Option<&'static FontMetrics> {{").unwrap();
+    writeln!(f, "match *font {{").unwrap();
+    for font in fonts {
+        writeln!(f, "FontSource::{} => Some(METRICS_{}.deref()),", font, font.to_uppercase()).unwrap();
+    };
+    // When we support non-builtin fonts: writeln!(f, "_ => None").unwrap();
+    writeln!(f, "}}").unwrap();
+    writeln!(f, "}}").unwrap();
+
+    writeln!(f, "lazy_static! {{").unwrap();
     write_cond(f, "Courier",
                include_str!("../data/Courier.afm")).unwrap();
-    write_cond(f, "Courier-Bold",
+    write_cond(f, "Courier_Bold",
                include_str!("../data/Courier-Bold.afm")).unwrap();
-    write_cond(f, "Courier-BoldOblique",
+    write_cond(f, "Courier_BoldOblique",
                include_str!("../data/Courier-BoldOblique.afm")).unwrap();
-    write_cond(f, "Courier-Oblique",
+    write_cond(f, "Courier_Oblique",
                include_str!("../data/Courier-Oblique.afm")).unwrap();
     write_cond(f, "Helvetica",
                include_str!("../data/Helvetica.afm")).unwrap();
-    write_cond(f, "Helvetica-Bold",
+    write_cond(f, "Helvetica_Bold",
                include_str!("../data/Helvetica-Bold.afm")).unwrap();
-    write_cond(f, "Helvetica-BoldOblique",
+    write_cond(f, "Helvetica_BoldOblique",
                include_str!("../data/Helvetica-BoldOblique.afm")).unwrap();
-    write_cond(f, "Helvetica-Oblique",
+    write_cond(f, "Helvetica_Oblique",
                include_str!("../data/Helvetica-Oblique.afm")).unwrap();
     write_cond(f, "Symbol",
                include_str!("../data/Symbol.afm")).unwrap();
-    write_cond(f, "Times-Bold",
+    write_cond(f, "Times_Bold",
                include_str!("../data/Times-Bold.afm")).unwrap();
-    write_cond(f, "Times-BoldItalic",
+    write_cond(f, "Times_BoldItalic",
                include_str!("../data/Times-BoldItalic.afm")).unwrap();
-    write_cond(f, "Times-Italic",
+    write_cond(f, "Times_Italic",
                include_str!("../data/Times-Italic.afm")).unwrap();
-    write_cond(f, "Times-Roman",
+    write_cond(f, "Times_Roman",
                include_str!("../data/Times-Roman.afm")).unwrap();
     write_cond(f, "ZapfDingbats",
                include_str!("../data/ZapfDingbats.afm")).unwrap();
-    writeln!(f, "  None").unwrap();
     writeln!(f, "}}").unwrap();
 }
