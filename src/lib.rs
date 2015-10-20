@@ -36,7 +36,7 @@ mod encoding;
 pub use ::encoding::Encoding;
 
 mod outline;
-pub use ::outline::OutlineItem;
+use ::outline::OutlineItem;
 
 mod canvas;
 pub use ::canvas::Canvas;

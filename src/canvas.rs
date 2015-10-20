@@ -164,7 +164,14 @@ impl<'a> Canvas<'a> {
             t.show(text)
         })
     }
+
     /// Add an item for this page in the document outline.
+    ///
+    /// An OutlineItem associates a name (contained in an ordered
+    /// tree) with a location in the document.  The PDF standard
+    /// supports several ways to specify an exact location on a page,
+    /// but this implementation currently only supports linking to a
+    /// specific page (the page that this Canvas is for).
     pub fn add_outline(&mut self, title: &str) {
         self.outline_items.push(OutlineItem::new(title));
     }
