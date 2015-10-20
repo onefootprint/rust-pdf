@@ -1,20 +1,22 @@
 use std::io::{Write, self};
 
 use ::fontref::FontRef;
-use ::encoding::WIN_ANSI_ENCODING;
+use ::encoding::{Encoding, WIN_ANSI_ENCODING};
 
 /// A text object is where text is put on the canvas.
 pub struct TextObject<'a> {
     output: &'a mut Write,
+    encoding: Encoding,
 }
 
 impl<'a> TextObject<'a> {
     pub fn new(output: &'a mut Write) -> TextObject {
-        TextObject { output: output }
+        TextObject { output: output, encoding: WIN_ANSI_ENCODING.clone() }
     }
     /// Set the font and font-size to be used by the following text
     /// operations.
     pub fn set_font(&mut self, font: &FontRef, size: f32) -> io::Result<()> {
+        self.encoding = font.get_encoding();
         write!(self.output, "{} {} Tf\n", font, size)
     }
     /// Set leading, the vertical distance from a line of text to the next.
@@ -66,7 +68,7 @@ impl<'a> TextObject<'a> {
     /// Show a text.
     pub fn show(&mut self, text: &str) -> io::Result<()> {
         try!(self.output.write_all(b"("));
-        try!(self.output.write_all(&WIN_ANSI_ENCODING.encode_string(text)));
+        try!(self.output.write_all(&self.encoding.encode_string(text)));
         try!(self.output.write_all(b") Tj\n"));
         Ok(())
     }
@@ -74,22 +76,24 @@ impl<'a> TextObject<'a> {
     // of strings as integers as arguments.
     pub fn show_j(&mut self, text: &str, offset: i32) -> io::Result<()> {
         try!(self.output.write_all(b"[("));
-        try!(self.output.write_all(&WIN_ANSI_ENCODING.encode_string(text)));
+        try!(self.output.write_all(&self.encoding.encode_string(text)));
         write!(self.output, ") {}] TJ\n", offset)
     }
     /// Show a text as a line.  See also `set_leading`.
     pub fn show_line(&mut self, text: &str) -> io::Result<()> {
         try!(self.output.write_all(b"("));
-        try!(self.output.write_all(&WIN_ANSI_ENCODING.encode_string(text)));
+        try!(self.output.write_all(&self.encoding.encode_string(text)));
         try!(self.output.write_all(b") '\n"));
         Ok(())
     }
     /// Push the graphics state on a stack.
     pub fn gsave(&mut self) -> io::Result<()> {
+        // TODO Push current encoding in self?
         write!(self.output, "q\n")
     }
     /// Pop a graphics state from the `gsave` stack and restore it.
     pub fn grestore(&mut self) -> io::Result<()> {
+        // TODO Pop current encoding in self?
         write!(self.output, "Q\n")
     }
 }

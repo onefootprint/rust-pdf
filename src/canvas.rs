@@ -2,7 +2,7 @@ use std::io::{Write, self};
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use ::fontsource::FontSource;
+use ::fontsource::{BuiltinFont, FontSource};
 use ::fontref::FontRef;
 use ::outline::OutlineItem;
 use textobject::TextObject;
@@ -11,15 +11,18 @@ use textobject::TextObject;
 ///
 /// Provides methods for defining and stroking or filling paths, as
 /// well as placing text objects.
+///
+/// TODO Everything here that takes a BuiltinFont should take any
+/// FontSource instead.
 pub struct Canvas<'a> {
     output: &'a mut Write,
-    fonts: &'a mut HashMap<FontSource, FontRef>,
+    fonts: &'a mut HashMap<BuiltinFont, FontRef>,
     outline_items: &'a mut Vec<OutlineItem>
 }
 
 impl<'a> Canvas<'a> {
     pub fn new(output: &'a mut Write, 
-               fonts: &'a mut HashMap<FontSource, FontRef>,
+               fonts: &'a mut HashMap<BuiltinFont, FontRef>,
                outline_items: &'a mut Vec<OutlineItem>) -> Canvas<'a> {
         Canvas {
             output: output,
@@ -106,12 +109,13 @@ impl<'a> Canvas<'a> {
         write!(self.output, "f\n")
     }
     /// Get a FontRef for a specific font.
-    pub fn get_font(&mut self, font: FontSource) -> FontRef {
+    pub fn get_font(&mut self, font: BuiltinFont) -> FontRef {
         if let Some(r) = self.fonts.get(&font) {
             return r.clone();
         }
         let n = self.fonts.len();
-        let r = FontRef::new(n, Arc::new(font.get_metrics().unwrap()));
+        let r = FontRef::new(n, font.get_encoding(),
+                             Arc::new(font.get_metrics()));
         self.fonts.insert(font, r.clone());
         r
     }
@@ -129,7 +133,7 @@ impl<'a> Canvas<'a> {
             Ok(result)
         }
     /// Utility method for placing a string of text.
-    pub fn left_text(&mut self, x: f32, y: f32, font: FontSource, size: f32,
+    pub fn left_text(&mut self, x: f32, y: f32, font: BuiltinFont, size: f32,
                       text: &str) -> io::Result<()> {
         let font = self.get_font(font);
         self.text(|t| {
@@ -139,7 +143,7 @@ impl<'a> Canvas<'a> {
         })
     }
     /// Utility method for placing a string of text.
-    pub fn right_text(&mut self, x: f32, y: f32, font: FontSource, size: f32,
+    pub fn right_text(&mut self, x: f32, y: f32, font: BuiltinFont, size: f32,
                       text: &str) -> io::Result<()> {
         let font = self.get_font(font);
         self.text(|t| {
@@ -150,7 +154,7 @@ impl<'a> Canvas<'a> {
         })
     }
     /// Utility method for placing a string of text.
-    pub fn center_text(&mut self, x: f32, y: f32, font: FontSource, size: f32,
+    pub fn center_text(&mut self, x: f32, y: f32, font: BuiltinFont, size: f32,
                        text: &str) -> io::Result<()> {
         let font = self.get_font(font);
         self.text(|t| {

@@ -1,6 +1,6 @@
 extern crate pdf;
 
-use pdf::FontSource;
+use pdf::{FontSource, BuiltinFont};
 
 
 fn is_close(a: f32, b: f32) -> bool {
@@ -11,7 +11,7 @@ fn is_close(a: f32, b: f32) -> bool {
 
 #[test]
 fn metrics_for_long_string() {
-    let font = FontSource::Times_Roman;
+    let font = BuiltinFont::Times_Roman;
     let size = 12.0;
     let some_text = "This is a test. ";
     let some_len = font.get_width(size, some_text);

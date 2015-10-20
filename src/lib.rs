@@ -3,11 +3,11 @@
 //! # Example
 //! ````no_run
 //! use std::fs::File;
-//! use pdf::{Pdf, FontSource};
+//! use pdf::{Pdf, BuiltinFont};
 //!
 //! let mut file = File::create("foo.pdf").unwrap();
 //! let mut document = Pdf::new(&mut file).unwrap();
-//! let font = FontSource::Times_Roman;
+//! let font = BuiltinFont::Times_Roman;
 //!
 //! document.render_page(180.0, 240.0, |canvas| {
 //!     canvas.center_text(90.0, 200.0, font, 24.0, "Hello World!")
@@ -24,7 +24,7 @@ use std::collections::HashMap;
 use std::collections::BTreeMap;
 
 mod fontsource;
-pub use ::fontsource::FontSource;
+pub use ::fontsource::{BuiltinFont, FontSource};
 
 mod fontref;
 pub use ::fontref::FontRef;
@@ -34,7 +34,6 @@ pub use ::fontmetrics::FontMetrics;
 
 mod encoding;
 pub use ::encoding::Encoding;
-pub use ::encoding::WIN_ANSI_ENCODING;
 
 mod outline;
 pub use ::outline::OutlineItem;
@@ -50,7 +49,7 @@ pub struct Pdf<'a, W: 'a + Write + Seek> {
     output: &'a mut W,
     object_offsets: Vec<i64>,
     page_objects_ids: Vec<usize>,
-    all_font_object_ids: HashMap<FontSource, usize>,
+    all_font_object_ids: HashMap<BuiltinFont, usize>,
     outline_items: Vec<OutlineItem>,
     document_info: BTreeMap<String, String>
 }
@@ -124,7 +123,7 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
 
             let start = try!(pdf.tell());
             try!(write!(pdf.output, "/DeviceRGB cs /DeviceRGB CS\n"));
-            let mut fonts : HashMap<FontSource, FontRef> = HashMap::new();
+            let mut fonts = HashMap::new();
             let mut outline_items: Vec<OutlineItem> = Vec::new();
             try!(render_contents(&mut Canvas::new(pdf.output, &mut fonts,
                                                   &mut outline_items)));

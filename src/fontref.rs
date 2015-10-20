@@ -2,7 +2,7 @@ use std::fmt;
 use std::sync::Arc;
 
 use ::fontmetrics::FontMetrics;
-use ::encoding::WIN_ANSI_ENCODING;
+use ::encoding::Encoding;
 
 /// A font ready to be used in a TextObject.
 ///
@@ -13,15 +13,22 @@ use ::encoding::WIN_ANSI_ENCODING;
 #[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub struct FontRef {
     n: usize,
+    encoding: Encoding,
     metrics: Arc<FontMetrics>
 }
 
 impl FontRef {
-    pub fn new(n: usize, metrics: Arc<FontMetrics>) -> FontRef {
+    pub fn new(n: usize, encoding: Encoding, metrics: Arc<FontMetrics>)
+               -> FontRef {
         FontRef {
             n: n,
+            encoding: encoding,
             metrics: metrics
         }
+    }
+
+    pub fn get_encoding(&self) -> Encoding {
+        self.encoding.clone()
     }
 
     /// Get the width of the given text in this font at given size.
@@ -34,7 +41,7 @@ impl FontRef {
     /// pdf files and in some methods on a `TextObject`.
     pub fn get_width_raw(&self, text: &str) -> u32 {
         let mut result = 0;
-        for char in WIN_ANSI_ENCODING.encode_string(text) {
+        for char in self.encoding.encode_string(text) {
             result += self.metrics.get_width(char).unwrap_or(100) as u32;
         }
         result
