@@ -5,8 +5,8 @@ use std::fs::File;
 use std::f32::consts::PI;
 
 fn main() {
-    let mut file = File::create("circles.pdf").unwrap();
-    let mut document = Pdf::new(&mut file).unwrap();
+    let file = File::create("circles.pdf").unwrap();
+    let mut document = Pdf::new(file).unwrap();
     document.render_page(400.0, 400.0, |c| {
         let (x, y) = (200.0, 200.0);
         let r = 190.0;

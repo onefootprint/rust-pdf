@@ -5,8 +5,8 @@
 //! use std::fs::File;
 //! use pdf::{Pdf, BuiltinFont};
 //!
-//! let mut file = File::create("foo.pdf").unwrap();
-//! let mut document = Pdf::new(&mut file).unwrap();
+//! let file = File::create("foo.pdf").unwrap();
+//! let mut document = Pdf::new(file).unwrap();
 //! let font = BuiltinFont::Times_Roman;
 //!
 //! document.render_page(180.0, 240.0, |canvas| {
@@ -22,6 +22,7 @@ extern crate time;
 use std::io::{Seek, SeekFrom, Write, self};
 use std::collections::HashMap;
 use std::collections::BTreeMap;
+use std::fs::File;
 
 mod fontsource;
 pub use ::fontsource::{BuiltinFont, FontSource};
@@ -45,8 +46,8 @@ mod textobject;
 pub use textobject::TextObject;
 
 /// The top-level object for writing a PDF.
-pub struct Pdf<'a, W: 'a + Write + Seek> {
-    output: &'a mut W,
+pub struct Pdf {
+    output: File,
     object_offsets: Vec<i64>,
     page_objects_ids: Vec<usize>,
     all_font_object_ids: HashMap<BuiltinFont, usize>,
@@ -57,10 +58,11 @@ pub struct Pdf<'a, W: 'a + Write + Seek> {
 const ROOT_OBJECT_ID: usize = 1;
 const PAGES_OBJECT_ID: usize = 2;
 
-impl<'a, W: Write + Seek> Pdf<'a, W> {
+impl Pdf {
 
     /// Create a new PDF document, writing to `output`.
-    pub fn new(output: &'a mut W) -> io::Result<Pdf<'a, W>> {
+    pub fn new(output: File) -> io::Result<Pdf> {
+        let mut output = output; // Strange but needed
         // FIXME: Find out the lowest version that contains the features we’re using.
         try!(output.write_all(b"%PDF-1.7\n%\xB5\xED\xAE\xFB\n"));
         Ok(Pdf {
@@ -125,7 +127,7 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
             try!(write!(pdf.output, "/DeviceRGB cs /DeviceRGB CS\n"));
             let mut fonts = HashMap::new();
             let mut outline_items: Vec<OutlineItem> = Vec::new();
-            try!(render_contents(&mut Canvas::new(pdf.output, &mut fonts,
+            try!(render_contents(&mut Canvas::new(&mut pdf.output, &mut fonts,
                                                   &mut outline_items)));
             let end = try!(pdf.tell());
 
@@ -172,7 +174,7 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
     }
 
     fn write_new_object<F, T>(&mut self, write_content: F) -> io::Result<T>
-    where F: FnOnce(usize, &mut Pdf<W>) -> io::Result<T> {
+    where F: FnOnce(usize, &mut Pdf) -> io::Result<T> {
         let id = self.object_offsets.len();
         let (result, offset) = try!(self.write_object(id, |pdf| write_content(id, pdf)));
         self.object_offsets.push(offset);
@@ -180,7 +182,7 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
     }
 
     fn write_object_with_id<F, T>(&mut self, id: usize, write_content: F) -> io::Result<T>
-    where F: FnOnce(&mut Pdf<W>) -> io::Result<T> {
+    where F: FnOnce(&mut Pdf) -> io::Result<T> {
         assert!(self.object_offsets[id] == -1);
         let (result, offset) = try!(self.write_object(id, write_content));
         self.object_offsets[id] = offset;
@@ -188,7 +190,7 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
     }
 
     fn write_object<F, T>(&mut self, id: usize, write_content: F) -> io::Result<(T, i64)>
-    where F: FnOnce(&mut Pdf<W>) -> io::Result<T> {
+    where F: FnOnce(&mut Pdf) -> io::Result<T> {
         // `as i64` here would only overflow for PDF files bigger than 2**63 bytes
         let offset = try!(self.tell()) as i64;
         try!(write!(self.output, "{} 0 obj\n", id));
@@ -242,7 +244,7 @@ impl<'a, W: Write + Seek> Pdf<'a, W> {
                     let (is_first, is_last) = (i == 0, i == count -1);
                     let id = try!(self.write_new_object(|object_id, pdf| {
                         item.write_dictionary(
-                            pdf.output, parent_id,
+                            &mut pdf.output, parent_id,
                             if is_first {None} else {Some(object_id-1)},
                             if is_last {None} else {Some(object_id+1)})
                             .and(Ok(object_id))}));

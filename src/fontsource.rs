@@ -1,4 +1,4 @@
-use std::io::{Seek, Write, self};
+use std::io::{Write, self};
 use std::hash::Hash;
 use std::cmp::Eq;
 use ::encoding::{Encoding, WIN_ANSI_ENCODING, SYMBOL_ENCODING};
@@ -34,8 +34,7 @@ pub enum BuiltinFont {
 /// Currently, only BuiltinFont implements this.
 /// TODO Add implementation(s) for other fonts.
 pub trait FontSource : PartialEq + Eq + Hash {
-    fn write_object<'a, W: 'a + Write + Seek>(&self, pdf: &mut Pdf<'a, W>)
-                                              -> io::Result<usize>
+    fn write_object(&self, pdf: &mut Pdf) -> io::Result<usize>
         where Self: Sized;
 
     /// Get the PDF name of this font.
@@ -74,7 +73,7 @@ pub trait FontSource : PartialEq + Eq + Hash {
 }
 
 impl FontSource for BuiltinFont {
-    fn write_object<'a, W: 'a + Write + Seek>(&self, pdf: &mut Pdf<'a, W>) -> io::Result<usize> {
+    fn write_object(&self, pdf: &mut Pdf) -> io::Result<usize> {
         // Note: This is enough for a Base14 font, other fonts will
         // require a stream for the actual font, and probably another
         // object for metrics etc
