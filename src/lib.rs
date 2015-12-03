@@ -5,8 +5,7 @@
 //! use std::fs::File;
 //! use pdf::{Pdf, BuiltinFont};
 //!
-//! let file = File::create("foo.pdf").unwrap();
-//! let mut document = Pdf::new(file).unwrap();
+//! let mut document = Pdf::create("foo.pdf").unwrap();
 //! let font = BuiltinFont::Times_Roman;
 //!
 //! document.render_page(180.0, 240.0, |canvas| {
@@ -59,6 +58,12 @@ const ROOT_OBJECT_ID: usize = 1;
 const PAGES_OBJECT_ID: usize = 2;
 
 impl Pdf {
+
+    /// Create a new PDF document as a new file with given filename.
+    pub fn create(filename: &str) -> io::Result<Pdf> {
+        let file = try!(File::create(filename));
+        Pdf::new(file)
+    }
 
     /// Create a new PDF document, writing to `output`.
     pub fn new(output: File) -> io::Result<Pdf> {

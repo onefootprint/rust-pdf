@@ -1,11 +1,9 @@
 extern crate pdf;
 
 use pdf::{Pdf, BuiltinFont};
-use std::fs::File;
 
 fn main() {
-    let file = File::create("text.pdf").unwrap();
-    let mut document = Pdf::new(file).unwrap();
+    let mut document = Pdf::create("text.pdf").unwrap();
     document.render_page(300.0, 400.0, |c| {
         try!(c.set_stroke_color(200, 200, 255));
         try!(c.rectangle(10.0, 10.0, 280.0, 380.0));
