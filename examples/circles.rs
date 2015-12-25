@@ -5,7 +5,7 @@ use std::f32::consts::PI;
 
 fn main() {
     let mut document = Pdf::create("circles.pdf").unwrap();
-    document.render_page(400.0, 400.0, |mut c| {
+    document.render_page(400.0, 400.0, |c| {
         let (x, y) = (200.0, 200.0);
         let r = 190.0;
         try!(c.set_stroke_color(0, 0, 0));

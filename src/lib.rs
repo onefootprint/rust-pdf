@@ -8,7 +8,7 @@
 //! let mut document = Pdf::create("foo.pdf").unwrap();
 //! let font = BuiltinFont::Times_Roman;
 //!
-//! document.render_page(180.0, 240.0, |mut canvas| {
+//! document.render_page(180.0, 240.0, |canvas| {
 //!     canvas.center_text(90.0, 200.0, font, 24.0, "Hello World!")
 //! });
 //! ````
@@ -120,7 +120,7 @@ impl Pdf {
     /// actual content of the page will be created by the function
     /// `render_contents` by applying drawing methods on the Canvas.
     pub fn render_page<F>(&mut self, width: f32, height: f32, render_contents: F) -> io::Result<()>
-    where F: FnOnce(Canvas) -> io::Result<()> {
+    where F: FnOnce(&mut Canvas) -> io::Result<()> {
         let (contents_object_id, content_length, fonts, outline_items) =
         try!(self.write_new_object(move |contents_object_id, pdf| {
             // Guess the ID of the next object. (We’ll assert it below.)
@@ -132,8 +132,8 @@ impl Pdf {
             try!(write!(pdf.output, "/DeviceRGB cs /DeviceRGB CS\n"));
             let mut fonts = HashMap::new();
             let mut outline_items: Vec<OutlineItem> = Vec::new();
-            try!(render_contents(Canvas::new(&mut pdf.output, &mut fonts,
-                                             &mut outline_items)));
+            try!(render_contents(&mut Canvas::new(&mut pdf.output, &mut fonts,
+                                                  &mut outline_items)));
             let end = try!(pdf.tell());
 
             try!(write!(pdf.output, "endstream\n"));
