@@ -45,5 +45,5 @@ git checkout master
 git merge --no-ff -m "Release $VERSION" develop
 git push --all
 
-echo "Publishing the release to crates.io ...
+echo "Publishing the release to crates.io ..."
 cargo publish
