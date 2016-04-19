@@ -3,18 +3,20 @@ extern crate lazy_static;
 
 use std::env;
 use std::fs::File;
-use std::io::{Write, Result};
+use std::io::{BufRead, BufReader, Write, Result};
 use std::path::Path;
 
 #[allow(dead_code)]
 mod encoding;
 use ::encoding::{Encoding, WIN_ANSI_ENCODING, SYMBOL_ENCODING};
 
-fn write_cond(f: &mut File, name: &str, encoding: Encoding, data: &str) -> Result<()> {
+fn write_cond(f: &mut File, name: &str, encoding: &Encoding) -> Result<()> {
     try!(writeln!(f, "  static ref METRICS_{}: FontMetrics = {{",
                   name.to_uppercase()));
     try!(writeln!(f, "    let mut widths = BTreeMap::new();"));
-    for line in data.lines() {
+    let afm_file = try!(File::open(format!("data/{}.afm", name.replace("_", "-"))));
+    for lineresult in BufReader::new(afm_file).lines() {
+        let line = try!(lineresult);
         let words : Vec<&str> = line.split_whitespace().collect();
         if words[0] == "C" && words[3] == "WX" && words[6] == "N" {
             if let (Some(c), Ok(w)) = (encoding.get_code(words[7]),
@@ -50,33 +52,20 @@ fn main() {
     writeln!(f, "}}").unwrap();
 
     writeln!(f, "lazy_static! {{").unwrap();
-    write_cond(f, "Courier", WIN_ANSI_ENCODING.clone(),
-               include_str!("../data/Courier.afm")).unwrap();
-    write_cond(f, "Courier_Bold", WIN_ANSI_ENCODING.clone(),
-               include_str!("../data/Courier-Bold.afm")).unwrap();
-    write_cond(f, "Courier_BoldOblique", WIN_ANSI_ENCODING.clone(),
-               include_str!("../data/Courier-BoldOblique.afm")).unwrap();
-    write_cond(f, "Courier_Oblique", WIN_ANSI_ENCODING.clone(),
-               include_str!("../data/Courier-Oblique.afm")).unwrap();
-    write_cond(f, "Helvetica", WIN_ANSI_ENCODING.clone(),
-               include_str!("../data/Helvetica.afm")).unwrap();
-    write_cond(f, "Helvetica_Bold", WIN_ANSI_ENCODING.clone(),
-               include_str!("../data/Helvetica-Bold.afm")).unwrap();
-    write_cond(f, "Helvetica_BoldOblique", WIN_ANSI_ENCODING.clone(),
-               include_str!("../data/Helvetica-BoldOblique.afm")).unwrap();
-    write_cond(f, "Helvetica_Oblique", WIN_ANSI_ENCODING.clone(),
-               include_str!("../data/Helvetica-Oblique.afm")).unwrap();
-    write_cond(f, "Symbol",  SYMBOL_ENCODING.clone(),
-               include_str!("../data/Symbol.afm")).unwrap();
-    write_cond(f, "Times_Bold", WIN_ANSI_ENCODING.clone(),
-               include_str!("../data/Times-Bold.afm")).unwrap();
-    write_cond(f, "Times_BoldItalic", WIN_ANSI_ENCODING.clone(),
-               include_str!("../data/Times-BoldItalic.afm")).unwrap();
-    write_cond(f, "Times_Italic", WIN_ANSI_ENCODING.clone(),
-               include_str!("../data/Times-Italic.afm")).unwrap();
-    write_cond(f, "Times_Roman", WIN_ANSI_ENCODING.clone(),
-               include_str!("../data/Times-Roman.afm")).unwrap();
-    write_cond(f, "ZapfDingbats", WIN_ANSI_ENCODING.clone(), // FIXME
-               include_str!("../data/ZapfDingbats.afm")).unwrap();
+    write_cond(f, "Courier", &WIN_ANSI_ENCODING).unwrap();
+    write_cond(f, "Courier_Bold", &WIN_ANSI_ENCODING).unwrap();
+    write_cond(f, "Courier_BoldOblique", &WIN_ANSI_ENCODING).unwrap();
+    write_cond(f, "Courier_Oblique", &WIN_ANSI_ENCODING).unwrap();
+    write_cond(f, "Helvetica", &WIN_ANSI_ENCODING).unwrap();
+    write_cond(f, "Helvetica_Bold", &WIN_ANSI_ENCODING).unwrap();
+    write_cond(f, "Helvetica_BoldOblique", &WIN_ANSI_ENCODING).unwrap();
+    write_cond(f, "Helvetica_Oblique", &WIN_ANSI_ENCODING).unwrap();
+    write_cond(f, "Symbol",  &SYMBOL_ENCODING).unwrap();
+    write_cond(f, "Times_Bold", &WIN_ANSI_ENCODING).unwrap();
+    write_cond(f, "Times_BoldItalic", &WIN_ANSI_ENCODING).unwrap();
+    write_cond(f, "Times_Italic", &WIN_ANSI_ENCODING).unwrap();
+    write_cond(f, "Times_Roman", &WIN_ANSI_ENCODING).unwrap();
+    // FIXME There is a special encoding for ZapfDingbats
+    write_cond(f, "ZapfDingbats", &WIN_ANSI_ENCODING).unwrap();
     writeln!(f, "}}").unwrap();
 }
