@@ -33,18 +33,16 @@ fn write_cond(f: &mut File, name: &str, encoding: &Encoding) -> Result<()> {
 fn main() {
     let dst = Path::new(&env::var("OUT_DIR").unwrap()).join("metrics_data.rs");
     let mut f = &mut File::create(&dst).unwrap();
-    let fonts = vec!("Courier", "Courier_Bold",
-                     "Courier_Oblique",
-                     "Courier_BoldOblique", "Helvetica",
-                     "Helvetica_Bold", "Helvetica_Oblique",
-                     "Helvetica_BoldOblique", "Times_Roman",
-                     "Times_Bold", "Times_Italic",
-                     "Times_BoldItalic", "Symbol",
-                     "ZapfDingbats");
+    let textfonts = vec!("Courier", "Courier_Bold",
+                         "Courier_Oblique", "Courier_BoldOblique",
+                         "Helvetica", "Helvetica_Bold",
+                         "Helvetica_Oblique", "Helvetica_BoldOblique",
+                         "Times_Roman", "Times_Bold",
+                         "Times_Italic", "Times_BoldItalic");
     writeln!(f, "pub fn get_builtin_metrics(font: &BuiltinFont)").unwrap();
     writeln!(f, "-> &'static FontMetrics {{").unwrap();
     writeln!(f, "match *font {{").unwrap();
-    for font in fonts {
+    for font in textfonts.iter().chain(vec!("Symbol", "ZapfDingbats").iter()) {
         writeln!(f, "BuiltinFont::{} => METRICS_{}.deref(),",
                  font, font.to_uppercase()).unwrap();
     };
@@ -52,19 +50,10 @@ fn main() {
     writeln!(f, "}}").unwrap();
 
     writeln!(f, "lazy_static! {{").unwrap();
-    write_cond(f, "Courier", &WIN_ANSI_ENCODING).unwrap();
-    write_cond(f, "Courier_Bold", &WIN_ANSI_ENCODING).unwrap();
-    write_cond(f, "Courier_BoldOblique", &WIN_ANSI_ENCODING).unwrap();
-    write_cond(f, "Courier_Oblique", &WIN_ANSI_ENCODING).unwrap();
-    write_cond(f, "Helvetica", &WIN_ANSI_ENCODING).unwrap();
-    write_cond(f, "Helvetica_Bold", &WIN_ANSI_ENCODING).unwrap();
-    write_cond(f, "Helvetica_BoldOblique", &WIN_ANSI_ENCODING).unwrap();
-    write_cond(f, "Helvetica_Oblique", &WIN_ANSI_ENCODING).unwrap();
+    for font in textfonts {
+        write_cond(f, font, &WIN_ANSI_ENCODING).unwrap();
+    }
     write_cond(f, "Symbol",  &SYMBOL_ENCODING).unwrap();
-    write_cond(f, "Times_Bold", &WIN_ANSI_ENCODING).unwrap();
-    write_cond(f, "Times_BoldItalic", &WIN_ANSI_ENCODING).unwrap();
-    write_cond(f, "Times_Italic", &WIN_ANSI_ENCODING).unwrap();
-    write_cond(f, "Times_Roman", &WIN_ANSI_ENCODING).unwrap();
     // FIXME There is a special encoding for ZapfDingbats
     write_cond(f, "ZapfDingbats", &WIN_ANSI_ENCODING).unwrap();
     writeln!(f, "}}").unwrap();
