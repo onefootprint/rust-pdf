@@ -4,7 +4,10 @@ version = "0.3.0"
 authors = ["Simon Sapin <simon.sapin@exyr.org>",
 	   "Rasmus Kaj <rasmus@krats.se>"]
 license = "MIT"
-description = "Generating PDF files in pure Rust."
+description = """
+Generate PDF files in pure Rust.
+Currently, simple vector graphics and text set in the 14 built-in \
+fonts are supported."""
 documentation = "http://rasmus.krats.se/doc/pdf/0.3.0/pdf/"
 repository = "https://github.com/kaj/rust-pdf"
 readme = "README.md"

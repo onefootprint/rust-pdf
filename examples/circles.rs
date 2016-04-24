@@ -1,8 +1,15 @@
+///! Example program drawing circles on a page.
 extern crate pdf;
 
 use pdf::Pdf;
 use std::f32::consts::PI;
 
+/// Create a `circles.pdf` file, with a single page containg a circle
+/// stroked in black, overwritten with a circle in a finer yellow
+/// stroke.
+/// The black drawing is drawn using the `Canvas.circle` method,
+/// which approximates a circle with four bezier curves.
+/// The yellow drawing is drawn as a 200-sided polygon.
 fn main() {
     let mut document = Pdf::create("circles.pdf").unwrap();
     document.render_page(400.0, 400.0, |c| {

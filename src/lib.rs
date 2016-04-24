@@ -1,8 +1,12 @@
 //! A library for creating pdf files.
+//!
+//! Currently, simple vector graphics and text set in the 14 built-in
+//! fonts are supported.
+//! The main entry point of the crate is the [struct Pdf](struct.Pdf.html),
+//! representing a PDF file being written.
 
 //! # Example
 //! ````no_run
-//! use std::fs::File;
 //! use pdf::{Pdf, BuiltinFont};
 //!
 //! let mut document = Pdf::create("foo.pdf").unwrap();
@@ -11,7 +15,11 @@
 //! document.render_page(180.0, 240.0, |canvas| {
 //!     canvas.center_text(90.0, 200.0, font, 24.0, "Hello World!")
 //! });
+//! document.finish();
 //! ````
+
+//! Some more working usage examples exists in [the examples directory]
+//! (https://github.com/kaj/rust-pdf/tree/master/examples).
 
 #[macro_use]
 extern crate lazy_static;
@@ -45,6 +53,12 @@ mod textobject;
 pub use textobject::TextObject;
 
 /// The top-level object for writing a PDF.
+///
+/// A PDF file is created with the `create` or `new` methods.
+/// Some metadata can be stored with `set_foo` methods, and pages
+/// are appended with the `render_page` method.
+/// Don't forget to call `finish` when done, to write the document
+/// trailer, without it the written file won't be a proper PDF.
 pub struct Pdf {
     output: File,
     object_offsets: Vec<i64>,
