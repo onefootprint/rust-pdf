@@ -11,16 +11,19 @@ if [ "$VERSION" == "" ]; then
 fi
 
 DOCSUBDIR=$PROJECT/$VERSION
-DOCURL=http://rasmus.krats.se/doc/$DOCSUBDIR/$PROJECT/
+DOCURL=https://rasmus.krats.se/doc/$DOCSUBDIR/$PROJECT/
 
 cat Cargo.toml \
     | sed -e "s#^version.*#version = \"$VERSION\"#" \
     | sed -e "s#^documentation.*#documentation = \"$DOCURL\"#" \
     > Cargo.toml.new
 mv Cargo.toml.new Cargo.toml
+cat README.md \
+    | sed -Ee "s#https://rasmus.krats.se/doc/pdf/[0-9.]+/pdf/#$DOCURL#" \
+    > README.md.new
+mv README.md.new README.md
 
 LOG=`mktemp --suffix=.buildlog`
-eval `cat Cargo.toml|grep -E '^(name|version)' | sed -e 's/ = /=/'`
 
 function error {
   cat $LOG
@@ -34,16 +37,17 @@ echo Making docs ...
 cargo doc --no-deps > $LOG 2>&1 || error
 
 echo Publishing docs ...
-ssh lucien rm -rf $DOCSUBDIR
-ssh lucien mkdir -p pubdoc/$PROJECT
-scp -qr target/doc lucien:pubdoc/$DOCSUBDIR
+ssh guran mkdir -p pubdoc/$PROJECT
+scp -qr target/doc guran:pubdoc/$DOCSUBDIR
 
 echo Comitting the relase ...
-git add Cargo.toml
+git add Cargo.toml README.md
 git commit -m "Prepare release $VERSION"
 git checkout master
 git merge --no-ff -m "Release $VERSION" develop
+git tag -a v$VERSION
 git push --all
+git push --tags
 
-echo "Publishing the release to crates.io ...
+echo "Publishing the release to crates.io ..."
 cargo publish

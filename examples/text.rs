@@ -1,7 +1,10 @@
+///! Example program drawing some text on a page.
 extern crate pdf;
 
 use pdf::{Pdf, BuiltinFont};
 
+/// Create a `text.pdf` file, with a single page containg some
+/// text lines positioned in various ways on some helper lines.
 fn main() {
     let mut document = Pdf::create("text.pdf").unwrap();
     document.render_page(300.0, 400.0, |c| {
