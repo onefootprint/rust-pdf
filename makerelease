@@ -45,7 +45,9 @@ git add Cargo.toml README.md
 git commit -m "Prepare release $VERSION"
 git checkout master
 git merge --no-ff -m "Release $VERSION" develop
+git tag -a v$VERSION
 git push --all
+git push --tags
 
 echo "Publishing the release to crates.io ..."
 cargo publish
