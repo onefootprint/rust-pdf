@@ -12,8 +12,8 @@ use textobject::TextObject;
 /// Provides methods for defining and stroking or filling paths, as
 /// well as placing text objects.
 ///
-/// TODO Everything here that takes a BuiltinFont should take any
-/// FontSource instead.
+/// TODO Everything here that takes a `BuiltinFont` should take any
+/// `FontSource` instead.
 pub struct Canvas<'a> {
     output: &'a mut Write,
     fonts: &'a mut HashMap<BuiltinFont, FontRef>,
@@ -167,7 +167,7 @@ impl<'a> Canvas<'a> {
 
     /// Add an item for this page in the document outline.
     ///
-    /// An OutlineItem associates a name (contained in an ordered
+    /// An outline item associates a name (contained in an ordered
     /// tree) with a location in the document.  The PDF standard
     /// supports several ways to specify an exact location on a page,
     /// but this implementation currently only supports linking to a
