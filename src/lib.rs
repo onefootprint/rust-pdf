@@ -165,7 +165,7 @@ impl Pdf {
             } else {
                 let object_id = try!(src.write_object(self));
                 font_object_ids.insert(r.clone(), object_id);
-                self.all_font_object_ids.insert(src.clone(), object_id);
+                self.all_font_object_ids.insert(*src, object_id);
            }
         }
         let page_object_id = try!(self.write_new_object(|page_object_id, pdf| {
