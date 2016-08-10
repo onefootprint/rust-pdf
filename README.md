@@ -5,6 +5,7 @@ fonts are supported.
 
 [![Build Status](https://travis-ci.org/kaj/rust-pdf.svg?branch=master)]
 (https://travis-ci.org/kaj/rust-pdf)
+[![](http://meritbadge.herokuapp.com/pdf)](https://crates.io/crates/pdf)
 
 To use this library, add it as a dependency in your `Cargo.toml`:
 
