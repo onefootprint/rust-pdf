@@ -6,6 +6,7 @@ use ::fontsource::{BuiltinFont, FontSource};
 use ::fontref::FontRef;
 use ::outline::OutlineItem;
 use textobject::TextObject;
+use graphicsstate::*;
 
 /// An visual area where content can be drawn (a page).
 ///
@@ -31,33 +32,57 @@ impl<'a> Canvas<'a> {
         }
     }
     
-    /// Append a closed rectangle with a corern at (x, y) and
+    /// Append a closed rectangle with a corner at (x, y) and
     /// extending width × height to the to the current path.
     pub fn rectangle(&mut self, x: f32, y: f32, width: f32, height: f32)
                      -> io::Result<()> {
         write!(self.output, "{} {} {} {} re\n", x, y, width, height)
     }
-    /// Set the line width in the graphics state
+    /// Set the line join style in the graphics state.
+    pub fn set_line_join_style(&mut self, style: JoinStyle) -> io::Result<()> {
+        write!(self.output, "{} j\n",
+               match style {
+                   JoinStyle::Miter => 0,
+                   JoinStyle::Round => 1,
+                   JoinStyle::Bevel => 2,
+               })
+    }
+    /// Set the line join style in the graphics state.
+    pub fn set_line_cap_style(&mut self, style: CapStyle) -> io::Result<()> {
+        write!(self.output, "{} J\n",
+               match style {
+                   CapStyle::Butt => 0,
+                   CapStyle::Round => 1,
+                   CapStyle::ProjectingSquare => 2,
+               })
+    }
+    /// Set the line width in the graphics state.
     pub fn set_line_width(&mut self, w: f32) -> io::Result<()> {
         write!(self.output, "{} w\n", w)
     }
-    /// Set rgb color for stroking operations
-    pub fn set_stroke_color(&mut self, r: u8, g: u8, b: u8) -> io::Result<()> {
+    /// Set color for stroking operations.
+    pub fn set_stroke_color(&mut self, color: Color) -> io::Result<()> {
         let norm = |c| { c as f32 / 255.0 };
-        write!(self.output, "{} {} {} SC\n", norm(r), norm(g), norm(b))
+        match color {
+            Color::RGB{red, green, blue} => {
+                write!(self.output, "{} {} {} SC\n", norm(red), norm(green), norm(blue))
+            }
+            Color::Gray{gray} => {
+                write!(self.output, "{} G\n", norm(gray))
+            }
+        }
     }
-    /// Set rgb color for non-stroking operations
-    pub fn set_fill_color(&mut self, r: u8, g: u8, b: u8) -> io::Result<()> {
+    /// Set color for non-stroking operations.
+    pub fn set_fill_color(&mut self, color: Color) -> io::Result<()> {
         let norm = |c| { c as f32 / 255.0 };
-        write!(self.output, "{} {} {} sc\n", norm(r), norm(g), norm(b))
-    }
-    /// Set gray level for stroking operations
-    pub fn set_stroke_gray(&mut self, gray: u8) -> io::Result<()> {
-        write!(self.output, "{} G\n", gray as f32 / 255.0)
-    }
-    /// Set gray level for non-stroking operations
-    pub fn set_fill_gray(&mut self, gray: u8) -> io::Result<()> {
-        write!(self.output, "{} g\n", gray as f32 / 255.0)
+        match color {
+            Color::RGB{red, green, blue} => {
+                write!(self.output, "{} {} {} sc\n", norm(red), norm(green), norm(blue))
+            }
+            Color::Gray{gray} => {
+                write!(self.output, "{} g\n", norm(gray))
+            }
+        }
     }
     /// Append a straight line from (x1, y1) to (x2, y2) to the current path.
     pub fn line(&mut self, x1: f32, y1: f32, x2: f32, y2: f32)
@@ -102,6 +127,10 @@ impl<'a> Canvas<'a> {
     }
     /// Stroke the current path.
     pub fn stroke(&mut self) -> io::Result<()> {
+        write!(self.output, "S\n")
+    }
+    /// Close and stroke the current path.
+    pub fn close_and_stroke(&mut self) -> io::Result<()> {
         write!(self.output, "s\n")
     }
     /// Fill the current path.
@@ -174,5 +203,16 @@ impl<'a> Canvas<'a> {
     /// specific page (the page that this Canvas is for).
     pub fn add_outline(&mut self, title: &str) {
         self.outline_items.push(OutlineItem::new(title));
+    }
+
+    /// Save the current graphics state.
+    /// The caller is responsible for restoring it later.
+    pub fn gsave(&mut self) -> io::Result<()> {
+        write!(self.output, "q\n")
+    }
+    /// Restor the current graphics state.
+    /// The caller is responsible for having saved it earlier.
+    pub fn grestore(&mut self) -> io::Result<()> {
+        write!(self.output, "Q\n")
     }
 }

@@ -43,6 +43,8 @@ pub use ::fontmetrics::FontMetrics;
 mod encoding;
 pub use ::encoding::Encoding;
 
+pub mod graphicsstate;
+
 mod outline;
 use ::outline::OutlineItem;
 

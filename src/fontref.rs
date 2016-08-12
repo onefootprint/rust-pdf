@@ -1,8 +1,8 @@
 use std::fmt;
 use std::sync::Arc;
 
-use ::fontmetrics::FontMetrics;
-use ::encoding::Encoding;
+use fontmetrics::FontMetrics;
+use encoding::Encoding;
 
 /// A font ready to be used in a TextObject.
 ///
@@ -14,16 +14,15 @@ use ::encoding::Encoding;
 pub struct FontRef {
     n: usize,
     encoding: Encoding,
-    metrics: Arc<FontMetrics>
+    metrics: Arc<FontMetrics>,
 }
 
 impl FontRef {
-    pub fn new(n: usize, encoding: Encoding, metrics: Arc<FontMetrics>)
-               -> FontRef {
+    pub fn new(n: usize, encoding: Encoding, metrics: Arc<FontMetrics>) -> FontRef {
         FontRef {
             n: n,
             encoding: encoding,
-            metrics: metrics
+            metrics: metrics,
         }
     }
 

@@ -2,6 +2,7 @@ use std::io::{Write, self};
 
 use ::fontref::FontRef;
 use ::encoding::{Encoding, WIN_ANSI_ENCODING};
+use graphicsstate::Color;
 
 /// A text object is where text is put on the canvas.
 pub struct TextObject<'a> {
@@ -40,15 +41,29 @@ impl<'a> TextObject<'a> {
     pub fn set_word_spacing(&mut self, a_w: f32) -> io::Result<()> {
         write!(self.output, "{} Tw\n", a_w)
     }
-    /// Set rgb color for stroking operations
-    pub fn set_stroke_color(&mut self, r: u8, g: u8, b: u8) -> io::Result<()> {
+    /// Set color for stroking operations.
+    pub fn set_stroke_color(&mut self, color: Color) -> io::Result<()> {
         let norm = |c| { c as f32 / 255.0 };
-        write!(self.output, "{} {} {} SC\n", norm(r), norm(g), norm(b))
+        match color {
+            Color::RGB{red, green, blue} => {
+                write!(self.output, "{} {} {} SC\n", norm(red), norm(green), norm(blue))
+            }
+            Color::Gray{gray} => {
+                write!(self.output, "{} G\n", norm(gray))
+            }
+        }
     }
-    /// Set rgb color for non-stroking operations
-    pub fn set_fill_color(&mut self, r: u8, g: u8, b: u8) -> io::Result<()> {
+    /// Set color for non-stroking operations.
+    pub fn set_fill_color(&mut self, color: Color) -> io::Result<()> {
         let norm = |c| { c as f32 / 255.0 };
-        write!(self.output, "{} {} {} sc\n", norm(r), norm(g), norm(b))
+        match color {
+            Color::RGB{red, green, blue} => {
+                write!(self.output, "{} {} {} sc\n", norm(red), norm(green), norm(blue))
+            }
+            Color::Gray{gray} => {
+                write!(self.output, "{} g\n", norm(gray))
+            }
+        }
     }
     /// Set gray level for stroking operations
     pub fn set_stroke_gray(&mut self, gray: u8) -> io::Result<()> {

@@ -2,6 +2,7 @@
 extern crate pdf;
 
 use pdf::Pdf;
+use pdf::graphicsstate::Color;
 use std::f32::consts::PI;
 
 /// Create a `circles.pdf` file, with a single page containg a circle
@@ -26,13 +27,13 @@ fn main() {
         let r = 190.0;
 
         // Set a wide black pen and stroke a circle
-        try!(c.set_stroke_color(0, 0, 0));
+        try!(c.set_stroke_color(Color::rgb(0, 0, 0)));
         try!(c.set_line_width(2.0));
         try!(c.circle(x, y, r));
         try!(c.stroke());
 
         // Set a finer yellow pen and stroke a 200-sided polygon
-        try!(c.set_stroke_color(255, 230, 150));
+        try!(c.set_stroke_color(Color::rgb(255, 230, 150)));
         try!(c.set_line_width(1.0));
         try!(c.move_to(x + r, y));
         let sides = 200;
