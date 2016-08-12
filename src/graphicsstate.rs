@@ -44,6 +44,7 @@ impl Color {
 
     /// # Example
     /// ````
+    /// # use pdf::graphicsstate::Color;
     /// let white  = Color::rgb(255, 255, 255);
     /// let black  = Color::rgb(0, 0, 0);
     /// let red    = Color::rgb(255, 0, 0);
@@ -57,6 +58,7 @@ impl Color {
 
     /// # Example
     /// ````
+    /// # use pdf::graphicsstate::Color;
     /// let white = Color::gray(255);
     /// let gray  = Color::gray(128);
     /// ````
