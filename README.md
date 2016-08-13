@@ -17,3 +17,5 @@ Some examples, that should work with the version containing them, can
 be found in the [examples](examples) directory.
 Read the [API documentation for the pdf crate]
 (https://rasmus.krats.se/doc/pdf/0.3.2/pdf/).
+A larger example of a program using this crate is [chord3, a chopro
+formatter](https://github.com/kaj/chord3).
