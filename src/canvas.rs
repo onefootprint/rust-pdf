@@ -84,6 +84,13 @@ impl<'a> Canvas<'a> {
             }
         }
     }
+
+    /// Modify the current transformation matrix for coordinates by
+    /// concatenating the specified matrix.
+    pub fn concat(&mut self, m: Matrix) -> io::Result<()> {
+        write!(self.output, "{} cm\n", m)
+    }
+
     /// Append a straight line from (x1, y1) to (x2, y2) to the current path.
     pub fn line(&mut self, x1: f32, y1: f32, x2: f32, y2: f32)
                 -> io::Result<()> {
