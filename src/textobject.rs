@@ -1,7 +1,7 @@
-use std::io::{Write, self};
+use std::io::{self, Write};
 
-use ::fontref::FontRef;
-use ::encoding::{Encoding, WIN_ANSI_ENCODING};
+use fontref::FontRef;
+use encoding::{Encoding, WIN_ANSI_ENCODING};
 use graphicsstate::Color;
 
 /// A text object is where text is put on the canvas.
@@ -12,7 +12,10 @@ pub struct TextObject<'a> {
 
 impl<'a> TextObject<'a> {
     pub fn new(output: &'a mut Write) -> TextObject {
-        TextObject { output: output, encoding: WIN_ANSI_ENCODING.clone() }
+        TextObject {
+            output: output,
+            encoding: WIN_ANSI_ENCODING.clone(),
+        }
     }
     /// Set the font and font-size to be used by the following text
     /// operations.
@@ -43,26 +46,30 @@ impl<'a> TextObject<'a> {
     }
     /// Set color for stroking operations.
     pub fn set_stroke_color(&mut self, color: Color) -> io::Result<()> {
-        let norm = |c| { c as f32 / 255.0 };
+        let norm = |c| c as f32 / 255.0;
         match color {
-            Color::RGB{red, green, blue} => {
-                write!(self.output, "{} {} {} SC\n", norm(red), norm(green), norm(blue))
+            Color::RGB { red, green, blue } => {
+                write!(self.output,
+                       "{} {} {} SC\n",
+                       norm(red),
+                       norm(green),
+                       norm(blue))
             }
-            Color::Gray{gray} => {
-                write!(self.output, "{} G\n", norm(gray))
-            }
+            Color::Gray { gray } => write!(self.output, "{} G\n", norm(gray)),
         }
     }
     /// Set color for non-stroking operations.
     pub fn set_fill_color(&mut self, color: Color) -> io::Result<()> {
-        let norm = |c| { c as f32 / 255.0 };
+        let norm = |c| c as f32 / 255.0;
         match color {
-            Color::RGB{red, green, blue} => {
-                write!(self.output, "{} {} {} sc\n", norm(red), norm(green), norm(blue))
+            Color::RGB { red, green, blue } => {
+                write!(self.output,
+                       "{} {} {} sc\n",
+                       norm(red),
+                       norm(green),
+                       norm(blue))
             }
-            Color::Gray{gray} => {
-                write!(self.output, "{} g\n", norm(gray))
-            }
+            Color::Gray { gray } => write!(self.output, "{} g\n", norm(gray)),
         }
     }
     /// Set gray level for stroking operations

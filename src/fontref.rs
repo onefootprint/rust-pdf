@@ -18,7 +18,10 @@ pub struct FontRef {
 }
 
 impl FontRef {
-    pub fn new(n: usize, encoding: Encoding, metrics: Arc<FontMetrics>) -> FontRef {
+    pub fn new(n: usize,
+               encoding: Encoding,
+               metrics: Arc<FontMetrics>)
+               -> FontRef {
         FontRef {
             n: n,
             encoding: encoding,

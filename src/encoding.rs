@@ -19,7 +19,7 @@ use std::collections::BTreeMap;
 pub struct Encoding {
     name: String,
     name_to_code: BTreeMap<&'static str, u8>,
-    unicode_to_code: BTreeMap<char, u8>
+    unicode_to_code: BTreeMap<char, u8>,
 }
 
 impl Encoding {
@@ -45,7 +45,7 @@ impl Encoding {
     pub fn get_code(&self, name: &str) -> Option<u8> {
         match self.name_to_code.get(name) {
             Some(&code) => Some(code),
-            None => None
+            None => None,
         }
     }
 
@@ -67,9 +67,18 @@ impl Encoding {
         let mut result = Vec::new();
         for ch in text.chars() {
             match ch {
-                '\\' => { result.push('\\' as u8); result.push('\\' as u8) },
-                '(' =>  { result.push('\\' as u8); result.push('(' as u8) },
-                ')' =>  { result.push('\\' as u8); result.push(')' as u8) },
+                '\\' => {
+                    result.push('\\' as u8);
+                    result.push('\\' as u8)
+                }
+                '(' => {
+                    result.push('\\' as u8);
+                    result.push('(' as u8)
+                }
+                ')' => {
+                    result.push('\\' as u8);
+                    result.push(')' as u8)
+                }
                 ch => {
                     if let Some(&code) = self.unicode_to_code.get(&ch) {
                         result.push(code)

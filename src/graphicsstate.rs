@@ -38,11 +38,10 @@ pub enum Color {
     #[doc(hidden)]
     Gray {
         gray: u8,
-    }
+    },
 }
 
 impl Color {
-
     /// Return a color from a RGB colorspace.
 
     /// # Example
@@ -54,7 +53,11 @@ impl Color {
     /// let yellow = Color::rgb(255, 255, 0);
     /// ````
     pub fn rgb(red: u8, green: u8, blue: u8) -> Self {
-        Color::RGB { red: red, green: green, blue: blue }
+        Color::RGB {
+            red: red,
+            green: green,
+            blue: blue,
+        }
     }
 
     /// Return a grayscale color value.
@@ -68,7 +71,6 @@ impl Color {
     pub fn gray(gray: u8) -> Self {
         Color::Gray { gray: gray }
     }
-
 }
 
 pub struct Matrix {
@@ -100,10 +102,8 @@ impl Matrix {
 
 impl Display for Matrix {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{} {} {} {} {} {}",
-               self.v[0], self.v[1],
-               self.v[2], self.v[3],
-               self.v[4], self.v[5])
+        let v = self.v;
+        write!(f, "{} {} {} {} {} {}", v[0], v[1], v[2], v[3], v[4], v[5])
     }
 }
 
@@ -113,9 +113,12 @@ impl Mul for Matrix {
         let a = self.v;
         let b = b.v;
         Matrix {
-            v: [a[0]*b[0] + a[1]*b[2],        a[0]*b[1] + a[1]*b[3],
-                a[2]*b[0] + a[3]*b[2],        a[2]*b[1] + a[3]*b[3],
-                a[4]*b[0] + a[5]*b[2] + b[4], a[4]*b[1] + a[5]*b[3] + b[5]],
+            v: [a[0] * b[0] + a[1] * b[2],
+                a[0] * b[1] + a[1] * b[3],
+                a[2] * b[0] + a[3] * b[2],
+                a[2] * b[1] + a[3] * b[3],
+                a[4] * b[0] + a[5] * b[2] + b[4],
+                a[4] * b[1] + a[5] * b[3] + b[5]],
         }
     }
 }
@@ -139,11 +142,11 @@ fn test_matrix_mul_d() {
 
 #[allow(dead_code)]
 fn assert_unit(m: Matrix) {
-    assert_eq!(None, diff(&[1., 0.,  0., 1.,  0., 0.], &m.v));
+    assert_eq!(None, diff(&[1., 0., 0., 1., 0., 0.], &m.v));
 }
 
 #[allow(dead_code)]
-fn diff(a: &[f32;6], b: &[f32;6]) -> Option<String> {
+fn diff(a: &[f32; 6], b: &[f32; 6]) -> Option<String> {
     let large = a.iter().fold(0f32, |x, &y| x.max(y))
            .max(b.iter().fold(0f32, |x, &y| x.max(y)));
     let epsilon = 1e-6;

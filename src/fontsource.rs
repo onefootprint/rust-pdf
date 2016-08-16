@@ -1,10 +1,10 @@
-use std::io::{Write, self};
-use std::hash::Hash;
+use encoding::{Encoding, SYMBOL_ENCODING, WIN_ANSI_ENCODING};
+use fontmetrics::{FontMetrics, get_builtin_metrics};
 use std::cmp::Eq;
-use ::encoding::{Encoding, WIN_ANSI_ENCODING, SYMBOL_ENCODING};
-use ::fontmetrics::FontMetrics;
-use ::fontmetrics::get_builtin_metrics;
-use ::Pdf;
+use std::hash::Hash;
+use std::io::{self, Write};
+use std::ops::Add;
+use Pdf;
 
 /// The "Base14" built-in fonts in PDF.
 /// Underscores in these names are hyphens in the real names.
@@ -24,7 +24,7 @@ pub enum BuiltinFont {
     Times_Italic,
     Times_BoldItalic,
     Symbol,
-    ZapfDingbats
+    ZapfDingbats,
 }
 
 
@@ -33,7 +33,7 @@ pub enum BuiltinFont {
 ///
 /// Currently, only BuiltinFont implements this.
 /// TODO Add implementation(s) for other fonts.
-pub trait FontSource : PartialEq + Eq + Hash {
+pub trait FontSource: PartialEq + Eq + Hash {
     fn write_object(&self, pdf: &mut Pdf) -> io::Result<usize>
         where Self: Sized;
 
@@ -52,8 +52,10 @@ pub trait FontSource : PartialEq + Eq + Hash {
     /// # Examples
     /// ```
     /// use pdf::{BuiltinFont, FontSource};
-    /// assert_eq!(62.004, BuiltinFont::Helvetica.get_width(12.0, "Hello World"));
-    /// assert_eq!(60.0, BuiltinFont::Courier.get_width(10.0, "0123456789"));
+    /// let proportional = BuiltinFont::Helvetica;
+    /// assert_eq!(62.004, proportional.get_width(12.0, "Hello World"));
+    /// let fixed = BuiltinFont::Courier;
+    /// assert_eq!(60.0, fixed.get_width(10.0, "0123456789"));
     /// ```
     fn get_width(&self, size: f32, text: &str) -> f32;
 
@@ -79,8 +81,10 @@ impl FontSource for BuiltinFont {
         // object for metrics etc
         pdf.write_new_object(|font_object_id, pdf| {
             try!(write!(pdf.output,
-                        "<< /Type /Font /Subtype /Type1 /BaseFont /{} /Encoding /{} >>\n",
-                        self.pdf_name(), self.get_encoding().get_name()));
+                        "<< /Type /Font /Subtype /Type1 /BaseFont /{} \
+                         /Encoding /{} >>\n",
+                        self.pdf_name(),
+                        self.get_encoding().get_name()));
             Ok(font_object_id)
         })
     }
@@ -96,7 +100,7 @@ impl FontSource for BuiltinFont {
         match self {
             &BuiltinFont::Symbol => SYMBOL_ENCODING.clone(),
             // &BuiltinFont::ZapfDingbats => ZAPFDINGBATS_ENCODING.clone(),
-            _ => WIN_ANSI_ENCODING.clone()
+            _ => WIN_ANSI_ENCODING.clone(),
         }
     }
 
@@ -106,11 +110,11 @@ impl FontSource for BuiltinFont {
 
     fn get_width_raw(&self, text: &str) -> u32 {
         let metrics = self.get_metrics();
-        let mut result = 0;
-        for char in self.get_encoding().encode_string(text) {
-            result += metrics.get_width(char).unwrap_or(100) as u32;
-        }
-        result
+        self.get_encoding()
+            .encode_string(text)
+            .iter()
+            .map(|&ch| metrics.get_width(ch).unwrap_or(100) as u32)
+            .fold(0, Add::add)
     }
 
     fn get_metrics(&self) -> FontMetrics {

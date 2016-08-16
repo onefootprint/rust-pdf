@@ -3,13 +3,13 @@ use std::fs::File;
 use std::io::{self, BufRead};
 use std::ops::Deref;
 
-use ::fontsource::BuiltinFont;
+use fontsource::BuiltinFont;
 
 /// Relevant data that can be loaded from an AFM (Adobe Font Metrics) file.
 /// A FontMetrics object is specific to a given encoding.
 #[derive(Debug, Hash, PartialEq, Eq, Clone)]
 pub struct FontMetrics {
-    widths: BTreeMap<u8, u16>
+    widths: BTreeMap<u8, u16>,
 }
 
 impl FontMetrics {
@@ -19,7 +19,7 @@ impl FontMetrics {
         let mut result = FontMetrics { widths: BTreeMap::new() };
         for line in source.lines() {
             let line = line.unwrap();
-            let words : Vec<&str> = line.split_whitespace().collect();
+            let words: Vec<&str> = line.split_whitespace().collect();
             if words[0] == "C" && words[3] == "WX" {
                 if let (Ok(c), Ok(w)) = (words[1].parse::<u8>(),
                                          words[4].parse::<u16>()) {
@@ -35,7 +35,7 @@ impl FontMetrics {
     pub fn get_width(&self, char: u8) -> Option<u16> {
         match self.widths.get(&char) {
             Some(&w) => Some(w),
-            None     => None
+            None => None,
         }
     }
 }
