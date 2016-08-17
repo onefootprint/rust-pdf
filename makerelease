@@ -3,8 +3,6 @@ set -e
 VERSION=$1
 PROJECT=pdf
 
-git checkout develop
-
 if [ "$VERSION" == "" ]; then
    echo "A release needs a version number!"
    exit 1
@@ -42,9 +40,7 @@ scp -qr target/doc guran:pubdoc/$DOCSUBDIR
 
 echo Comitting the relase ...
 git add Cargo.toml README.md
-git commit -m "Prepare release $VERSION"
-git checkout master
-git merge --no-ff -m "Release $VERSION" develop
+git commit -m "Release $VERSION"
 git tag -a v$VERSION
 git push --all
 git push --tags
