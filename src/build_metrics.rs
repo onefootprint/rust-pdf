@@ -14,7 +14,9 @@ fn write_cond(f: &mut File, name: &str, encoding: &Encoding) -> Result<()> {
     try!(writeln!(f, "  static ref METRICS_{}: FontMetrics = {{",
                   name.to_uppercase()));
     try!(writeln!(f, "    let mut widths = BTreeMap::new();"));
-    let afm_file = try!(File::open(format!("data/{}.afm", name.replace("_", "-"))));
+    let filename = format!("data/{}.afm", name.replace("_", "-"));
+    println!("cargo:rerun-if-changed={}", filename);
+    let afm_file = try!(File::open(filename));
     for lineresult in BufReader::new(afm_file).lines() {
         let line = try!(lineresult);
         let words : Vec<&str> = line.split_whitespace().collect();
