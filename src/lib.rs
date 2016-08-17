@@ -145,10 +145,9 @@ impl Pdf {
             try!(self.write_new_object(move |contents_object_id, pdf| {
                 // Guess the ID of the next object. (We’ll assert it below.)
                 try!(write!(pdf.output,
-                            "<<  /Length {} 0 R\n",
+                            "<< /Length {} 0 R >>\n\
+                             stream\n",
                             contents_object_id + 1));
-                try!(write!(pdf.output, ">>\n"));
-                try!(write!(pdf.output, "stream\n"));
 
                 let start = try!(pdf.tell());
                 try!(write!(pdf.output, "/DeviceRGB cs /DeviceRGB CS\n"));
@@ -179,21 +178,22 @@ impl Pdf {
         }
         let page_object_id = try!(self.write_new_object(|page_object_id,
                                                          pdf| {
-            try!(write!(pdf.output, "<<  /Type /Page\n"));
-            try!(write!(pdf.output, "    /Parent {} 0 R\n", PAGES_OBJECT_ID));
-            try!(write!(pdf.output, "    /Resources << /Font << "));
+            try!(write!(pdf.output,
+                        "<< /Type /Page\n   \
+                            /Parent {} 0 R\n   \
+                            /Resources << /Font << ",
+                        PAGES_OBJECT_ID));
             for (r, object_id) in &font_object_ids {
                 try!(write!(pdf.output, "{} {} 0 R ", r, object_id));
             }
-            try!(write!(pdf.output, ">> >>\n"));
             try!(write!(pdf.output,
-                        "    /MediaBox [ 0 0 {} {} ]\n",
-                        width,
-                        height));
-            try!(write!(pdf.output,
-                        "    /Contents {} 0 R\n",
-                        contents_object_id));
-            try!(write!(pdf.output, ">>\n"));
+                        ">> >>\n   \
+                         /MediaBox [ 0 0 {width} {height} ]\n   \
+                         /Contents {c_oid} 0 R\n\
+                         >>\n",
+                        width = width,
+                        height = height,
+                        c_oid = contents_object_id));
             Ok(page_object_id)
         }));
         // Take the outline_items from this page, mark them with the page ref,
@@ -249,16 +249,17 @@ impl Pdf {
     /// the xref list, the trailer object and the startxref position.
     pub fn finish(mut self) -> io::Result<()> {
         try!(self.write_object_with_id(PAGES_OBJECT_ID, |pdf| {
-            try!(write!(pdf.output, "<<  /Type /Pages\n"));
             try!(write!(pdf.output,
-                        "    /Count {}\n",
-                        pdf.page_objects_ids.len()));
-            try!(write!(pdf.output, "    /Kids [ "));
+                        "<< /Type /Pages\n   \
+                         /Count {c}\n   \
+                         /Kids [ ",
+                        c = pdf.page_objects_ids.len()));
             for &page_object_id in &pdf.page_objects_ids {
                 try!(write!(pdf.output, "{} 0 R ", page_object_id));
             }
-            try!(write!(pdf.output, "]\n"));
-            try!(write!(pdf.output, ">>\n"));
+            try!(write!(pdf.output,
+                        "]\n\
+                         >>\n"));
             Ok(())
         }));
         let document_info_id = if !self.document_info.is_empty() {
@@ -270,8 +271,10 @@ impl Pdf {
                 }
                 if let Ok(now) = time::strftime("%Y%m%d%H%M%S%z",
                                                 &time::now()) {
-                    try!(write!(pdf.output, " /CreationDate (D:{})", now));
-                    try!(write!(pdf.output, " /ModDate (D:{})", now));
+                    try!(write!(pdf.output,
+                                " /CreationDate (D:{now})\n \
+                                  /ModDate (D:{now})",
+                                now = now));
                 }
                 try!(write!(pdf.output, ">>\n"));
                 Ok(Some(page_object_id))
@@ -312,11 +315,15 @@ impl Pdf {
                 }
             }
             try!(self.write_object_with_id(parent_id, |pdf| {
-                try!(write!(pdf.output, "<< /Type /Outlines\n"));
-                try!(write!(pdf.output, "/First {} 0 R\n", first_id));
-                try!(write!(pdf.output, "/Last {} 0 R\n", last_id));
-                try!(write!(pdf.output, "/Count {}\n", count));
-                write!(pdf.output, ">>\n")
+                write!(pdf.output,
+                       "<< /Type /Outlines\n   \
+                           /First {first} 0 R\n   \
+                           /Last {last} 0 R\n   \
+                           /Count {count}\n\
+                        >>\n",
+                       last = last_id,
+                       first = first_id,
+                       count = count)
             }));
             Some(parent_id)
         } else {
@@ -324,8 +331,10 @@ impl Pdf {
         };
 
         try!(self.write_object_with_id(ROOT_OBJECT_ID, |pdf| {
-            try!(write!(pdf.output, "<<  /Type /Catalog\n"));
-            try!(write!(pdf.output, "    /Pages {} 0 R\n", PAGES_OBJECT_ID));
+            try!(write!(pdf.output,
+                        "<< /Type /Catalog\n   \
+                            /Pages {} 0 R\n",
+                        PAGES_OBJECT_ID));
             if let Some(outlines_id) = outlines_id {
                 try!(write!(pdf.output, "/Outlines {} 0 R\n", outlines_id));
             }
@@ -333,25 +342,32 @@ impl Pdf {
             Ok(())
         }));
         let startxref = try!(self.tell());
-        try!(write!(self.output, "xref\n"));
-        try!(write!(self.output, "0 {}\n", self.object_offsets.len()));
-        // Object 0 is special
-        try!(write!(self.output, "0000000000 65535 f \n"));
+        try!(write!(self.output,
+                    "xref\n\
+                     0 {}\n\
+                     0000000000 65535 f \n",
+                    self.object_offsets.len()));
+        // Object 0 (above) is special
         // Use [1..] to skip object 0 in self.object_offsets.
         for &offset in &self.object_offsets[1..] {
             assert!(offset >= 0);
             try!(write!(self.output, "{:010} 00000 n \n", offset));
         }
-        try!(write!(self.output, "trailer\n"));
-        try!(write!(self.output, "<<  /Size {}\n", self.object_offsets.len()));
-        try!(write!(self.output, "    /Root {} 0 R\n", ROOT_OBJECT_ID));
+        try!(write!(self.output,
+                    "trailer\n\
+                     << /Size {size}\n   \
+                        /Root {root} 0 R\n",
+                    size = self.object_offsets.len(),
+                    root = ROOT_OBJECT_ID));
         if let Some(id) = document_info_id {
-            try!(write!(self.output, "    /Info {} 0 R\n", id));
+            try!(write!(self.output, "   /Info {} 0 R\n", id));
         }
-        try!(write!(self.output, ">>\n"));
-        try!(write!(self.output, "startxref\n"));
-        try!(write!(self.output, "{}\n", startxref));
-        try!(write!(self.output, "%%EOF\n"));
+        try!(write!(self.output,
+                    ">>\n\
+                     startxref\n\
+                     {}\n\
+                     %%EOF\n",
+                    startxref));
         Ok(())
     }
 }
