@@ -11,10 +11,10 @@ mod encoding;
 use encoding::{Encoding, SYMBOL_ENCODING, WIN_ANSI_ENCODING};
 
 fn write_cond(f: &mut File, name: &str, encoding: &Encoding) -> Result<()> {
-    try!(writeln!(f,
-                  "  static ref METRICS_{name}: FontMetrics = {{\n    \
-                       let mut widths = BTreeMap::new();",
-                  name = name.to_uppercase()));
+    try!(write!(f,
+                "  static ref METRICS_{name}: FontMetrics = \
+                 FontMetrics::from_slice(&[",
+                name = name.to_uppercase()));
     let filename = format!("data/{}.afm", name.replace("_", "-"));
     println!("cargo:rerun-if-changed={}", filename);
     let afm_file = try!(File::open(filename));
@@ -24,13 +24,11 @@ fn write_cond(f: &mut File, name: &str, encoding: &Encoding) -> Result<()> {
         if words[0] == "C" && words[3] == "WX" && words[6] == "N" {
             if let (Some(c), Ok(w)) = (encoding.get_code(words[7]),
                                        words[4].parse::<u16>()) {
-                try!(writeln!(f, "    widths.insert({}, {});", c, w));
+                try!(write!(f, "({}, {}), ", c, w));
             }
         }
     }
-    try!(writeln!(f,
-                  "    FontMetrics{{ widths: widths }}\n  \
-                     }};"));
+    try!(writeln!(f, "]);"));
     Ok(())
 }
 
