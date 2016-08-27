@@ -38,6 +38,7 @@ pub trait FontSource: PartialEq + Eq + Hash {
         where Self: Sized;
 
     /// Get the PDF name of this font.
+    ///
     /// # Examples
     /// ```
     /// use pdf::{BuiltinFont, FontSource};

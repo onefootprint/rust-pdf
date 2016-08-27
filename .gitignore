@@ -2,6 +2,7 @@ target
 Cargo.lock
 
 # Output from examples
+example.pdf
 circles.pdf
 text.pdf
 mandala.pdf
