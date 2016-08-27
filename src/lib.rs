@@ -205,17 +205,16 @@ impl Pdf {
                                                          pdf| {
             try!(write!(pdf.output,
                         "<< /Type /Page\n   \
-                            /Parent {} 0 R\n   \
-                            /Resources << /Font << ",
-                        PAGES_OBJECT_ID));
-            for (r, object_id) in &font_object_ids {
-                try!(write!(pdf.output, "{} {} 0 R ", r, object_id));
-            }
-            try!(write!(pdf.output,
-                        ">> >>\n   \
-                         /MediaBox [ 0 0 {width} {height} ]\n   \
-                         /Contents {c_oid} 0 R\n\
+                            /Parent {parent} 0 R\n   \
+                            /Resources << /Font << {fontrefs}>> >>\n   \
+                            /MediaBox [ 0 0 {width} {height} ]\n   \
+                            /Contents {c_oid} 0 R\n\
                          >>\n",
+                        parent = PAGES_OBJECT_ID,
+                        fontrefs = font_object_ids
+                            .iter()
+                            .map(|(r, id)| format!("{} {} 0 R ", r, id))
+                            .collect::<String>()
                         width = width,
                         height = height,
                         c_oid = contents_object_id));

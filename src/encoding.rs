@@ -81,11 +81,8 @@ impl Encoding {
                     result.push(')' as u8)
                 }
                 ch => {
-                    if let Some(&code) = self.unicode_to_code.get(&ch) {
-                        result.push(code)
-                    } else {
-                        result.push('?' as u8);
-                    }
+                    result.push(*self.unicode_to_code.get(&ch)
+                                    .unwrap_or(&('?' as u8)))
                 }
             }
         }
