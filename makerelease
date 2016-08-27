@@ -9,17 +9,11 @@ if [ "$VERSION" == "" ]; then
 fi
 
 DOCSUBDIR=$PROJECT/$VERSION
-DOCURL=https://rasmus.krats.se/doc/$DOCSUBDIR/$PROJECT/
 
 cat Cargo.toml \
     | sed -e "s#^version.*#version = \"$VERSION\"#" \
-    | sed -e "s#^documentation.*#documentation = \"$DOCURL\"#" \
     > Cargo.toml.new
 mv Cargo.toml.new Cargo.toml
-cat README.md \
-    | sed -Ee "s#https://rasmus.krats.se/doc/pdf/[0-9.]+/pdf/#$DOCURL#" \
-    > README.md.new
-mv README.md.new README.md
 
 LOG=`mktemp --suffix=.buildlog`
 
