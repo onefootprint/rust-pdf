@@ -25,13 +25,6 @@ function error {
 echo Testing ...
 cargo test > $LOG 2>&1 || error
 
-echo Making docs ...
-cargo doc --no-deps > $LOG 2>&1 || error
-
-echo Publishing docs ...
-ssh guran mkdir -p pubdoc/$PROJECT
-scp -qr target/doc guran:pubdoc/$DOCSUBDIR
-
 echo Comitting the relase ...
 git add Cargo.toml README.md
 git commit -m "Release $VERSION"
