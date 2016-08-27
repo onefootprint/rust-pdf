@@ -214,7 +214,7 @@ impl Pdf {
                         fontrefs = font_object_ids
                             .iter()
                             .map(|(r, id)| format!("{} {} 0 R ", r, id))
-                            .collect::<String>()
+                            .collect::<String>(),
                         width = width,
                         height = height,
                         c_oid = contents_object_id));
