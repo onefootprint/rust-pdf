@@ -23,6 +23,7 @@ pub struct Encoding {
 }
 
 impl Encoding {
+    /// The name of the encoding, as used in the font object.
     pub fn get_name(&self) -> String {
         self.name.clone()
     }

@@ -1,8 +1,9 @@
 target
 Cargo.lock
 
-# Output from examples
+# Output from examples and tests
 example.pdf
+foo.pdf
 circles.pdf
 text.pdf
 mandala.pdf

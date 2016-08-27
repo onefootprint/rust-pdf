@@ -8,7 +8,7 @@ use Pdf;
 
 /// The "Base14" built-in fonts in PDF.
 /// Underscores in these names are hyphens in the real names.
-#[allow(non_camel_case_types)]
+#[allow(non_camel_case_types, missing_docs)]
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone)]
 pub enum BuiltinFont {
     Courier,
@@ -34,6 +34,10 @@ pub enum BuiltinFont {
 /// Currently, only BuiltinFont implements this.
 /// TODO Add implementation(s) for other fonts.
 pub trait FontSource: PartialEq + Eq + Hash {
+    /// Write the object(s) for this font to a pdf file.
+    ///
+    /// This is called automatically for each font used in a document.
+    /// There should be no need to call this method from user code.
     fn write_object(&self, pdf: &mut Pdf) -> io::Result<usize>
         where Self: Sized;
 
@@ -46,6 +50,7 @@ pub trait FontSource: PartialEq + Eq + Hash {
     /// ```
     fn pdf_name(&self) -> String;
 
+    /// Get the encoding that this font uses.
     fn get_encoding(&self) -> Encoding;
 
     /// Get the width of a string in this font at given size.

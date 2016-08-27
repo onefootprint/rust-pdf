@@ -73,28 +73,57 @@ impl Color {
     }
 }
 
+/// A transformation matrix for the pdf graphics state.
+///
+/// Matrixes can be created with numerous named constructors and
+/// combined by multiplication.
+///
+/// # Examples
+///
+/// ```
+/// # use pdf::{Pdf, BuiltinFont, FontSource};
+/// # use pdf::graphicsstate::Matrix;
+/// # let mut document = Pdf::create("foo.pdf").unwrap();
+/// # document.render_page(180.0, 240.0, |canvas| {
+/// try!(canvas.concat(Matrix::translate(10.0, 24.0)));
+///
+/// // Matrixes can be combined by multiplication:
+/// try!(canvas.concat(Matrix::translate(45.0, 0.0) * Matrix::rotate_deg(45.0)));
+/// // ... will be visualy identical to:
+/// try!(canvas.concat(Matrix::translate(45.0, 0.0)));
+/// try!(canvas.concat(Matrix::rotate_deg(45.0)));
+/// # Ok(())
+/// # }).unwrap();
+/// # document.finish().unwrap();
+/// ```
 pub struct Matrix {
     v: [f32; 6],
 }
 
 impl Matrix {
+    /// Construct a matrix for translation
     pub fn translate(dx: f32, dy: f32) -> Self {
         Matrix { v: [1., 0., 0., 1., dx, dy] }
     }
-    /// Construct a matrix for rotating by a radians.
+    /// Construct a matrix for rotating by `a` radians.
     pub fn rotate(a: f32) -> Self {
         Matrix { v: [a.cos(), a.sin(), -a.sin(), a.cos(), 0., 0.] }
     }
-    /// Construct a matrix for rotating by a degrees.
+    /// Construct a matrix for rotating by `a` degrees.
     pub fn rotate_deg(a: f32) -> Self {
         Self::rotate(a * PI / 180.)
     }
+    /// Construct a matrix for scaling by factor `sx` in x-direction
+    /// and by `sy` in y-direction.
     pub fn scale(sx: f32, sy: f32) -> Self {
         Matrix { v: [sx, 0., 0., sy, 0., 0.] }
     }
+    /// Construct a matrix for scaling by the same factor, `s` in both
+    /// directions.
     pub fn uniform_scale(s: f32) -> Self {
         Self::scale(s, s)
     }
+    /// Construct a matrix for skewing.
     pub fn skew(a: f32, b: f32) -> Self {
         Matrix { v: [1., a.tan(), b.tan(), 1., 0., 0.] }
     }

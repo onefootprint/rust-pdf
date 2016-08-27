@@ -22,6 +22,7 @@ pub struct Canvas<'a> {
 }
 
 impl<'a> Canvas<'a> {
+    /// TODO Should not public outside crate.
     pub fn new(output: &'a mut Write,
                fonts: &'a mut HashMap<BuiltinFont, FontRef>,
                outline_items: &'a mut Vec<OutlineItem>)

@@ -44,6 +44,7 @@
 //!
 //! Some more working usage examples exists in [the examples directory]
 //! (https://github.com/kaj/rust-pdf/tree/master/examples).
+#![deny(missing_docs)]
 
 #[macro_use]
 extern crate lazy_static;
