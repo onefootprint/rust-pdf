@@ -1,6 +1,6 @@
 [package]
 name = "pdf"
-version = "0.4.1"
+version = "0.4.2"
 authors = ["Simon Sapin <simon.sapin@exyr.org>",
 	   "Rasmus Kaj <rasmus@krats.se>"]
 license = "MIT"
