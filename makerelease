@@ -8,11 +8,7 @@ if [ "$VERSION" == "" ]; then
    exit 1
 fi
 
-DOCSUBDIR=$PROJECT/$VERSION
-
-cat Cargo.toml \
-    | sed -e "s#^version.*#version = \"$VERSION\"#" \
-    > Cargo.toml.new
+sed -e "s#^version.*#version = \"$VERSION\"#" < Cargo.toml > Cargo.toml.new
 mv Cargo.toml.new Cargo.toml
 
 LOG=`mktemp --suffix=.buildlog`
