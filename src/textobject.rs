@@ -75,6 +75,7 @@ impl<'a> TextObject<'a> {
     pub fn set_word_spacing(&mut self, a_w: f32) -> io::Result<()> {
         write!(self.output, "{} Tw\n", a_w)
     }
+
     /// Set color for stroking operations.
     pub fn set_stroke_color(&mut self, color: Color) -> io::Result<()> {
         let norm = |c| c as f32 / 255.0;
@@ -103,14 +104,7 @@ impl<'a> TextObject<'a> {
             Color::Gray { gray } => write!(self.output, "{} g\n", norm(gray)),
         }
     }
-    /// Set gray level for stroking operations
-    pub fn set_stroke_gray(&mut self, gray: u8) -> io::Result<()> {
-        write!(self.output, "{} G\n", gray as f32 / 255.0)
-    }
-    /// Set gray level for non-stroking operations
-    pub fn set_fill_gray(&mut self, gray: u8) -> io::Result<()> {
-        write!(self.output, "{} g\n", gray as f32 / 255.0)
-    }
+
     /// Move text position.
     ///
     /// The first time `pos` is called in a
