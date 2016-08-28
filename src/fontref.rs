@@ -25,19 +25,19 @@ pub struct FontRef {
     metrics: Arc<FontMetrics>,
 }
 
-impl FontRef {
-    /// Should not be called by user code.
-    pub fn new(n: usize,
-               encoding: Encoding,
-               metrics: Arc<FontMetrics>)
-               -> FontRef {
-        FontRef {
-            n: n,
-            encoding: encoding,
-            metrics: metrics,
-        }
+// Should not be called by user code.
+pub fn create_font_ref(n: usize,
+                       encoding: Encoding,
+                       metrics: Arc<FontMetrics>)
+                       -> FontRef {
+    FontRef {
+        n: n,
+        encoding: encoding,
+        metrics: metrics,
     }
+}
 
+impl FontRef {
     /// Get the encoding used by the referenced font.
     pub fn get_encoding(&self) -> Encoding {
         self.encoding.clone()

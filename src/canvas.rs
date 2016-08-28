@@ -21,19 +21,19 @@ pub struct Canvas<'a> {
     outline_items: &'a mut Vec<OutlineItem>,
 }
 
-impl<'a> Canvas<'a> {
-    /// TODO Should not public outside crate.
-    pub fn new(output: &'a mut Write,
-               fonts: &'a mut HashMap<BuiltinFont, FontRef>,
-               outline_items: &'a mut Vec<OutlineItem>)
-               -> Canvas<'a> {
-        Canvas {
-            output: output,
-            fonts: fonts,
-            outline_items: outline_items,
-        }
+// Should not be called by user code.
+pub fn create_canvas<'a>(output: &'a mut Write,
+                         fonts: &'a mut HashMap<BuiltinFont, FontRef>,
+                         outline_items: &'a mut Vec<OutlineItem>)
+                         -> Canvas<'a> {
+    Canvas {
+        output: output,
+        fonts: fonts,
+        outline_items: outline_items,
     }
+}
 
+impl<'a> Canvas<'a> {
     /// Append a closed rectangle with a corner at (x, y) and
     /// extending width × height to the to the current path.
     pub fn rectangle(&mut self,
@@ -168,13 +168,14 @@ impl<'a> Canvas<'a> {
     }
     /// Get a FontRef for a specific font.
     pub fn get_font(&mut self, font: BuiltinFont) -> FontRef {
+        use fontref::create_font_ref;
         let next_n = self.fonts.len();
         self.fonts
             .entry(font)
             .or_insert_with(|| {
-                FontRef::new(next_n,
-                             font.get_encoding(),
-                             Arc::new(font.get_metrics()))
+                create_font_ref(next_n,
+                                font.get_encoding(),
+                                Arc::new(font.get_metrics()))
             })
             .clone()
     }
@@ -188,8 +189,9 @@ impl<'a> Canvas<'a> {
     pub fn text<F, T>(&mut self, render_text: F) -> io::Result<T>
         where F: FnOnce(&mut TextObject) -> io::Result<T>
     {
+        use textobject::create_text_object;
         try!(write!(self.output, "BT\n"));
-        let result = try!(render_text(&mut TextObject::new(self.output)));
+        let result = try!(render_text(&mut create_text_object(self.output)));
         try!(write!(self.output, "ET\n"));
         Ok(result)
     }

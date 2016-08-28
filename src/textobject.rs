@@ -38,16 +38,15 @@ pub struct TextObject<'a> {
     encoding: Encoding,
 }
 
-impl<'a> TextObject<'a> {
-    /// See [Canvas::text](struct.Canvas.html#method.text).
-    /// User code is not supposed to call this constructor.
-    pub fn new(output: &'a mut Write) -> TextObject {
-        TextObject {
-            output: output,
-            encoding: WIN_ANSI_ENCODING.clone(),
-        }
+// Should not be called by user code.
+pub fn create_text_object<'a>(output: &'a mut Write) -> TextObject<'a> {
+    TextObject {
+        output: output,
+        encoding: WIN_ANSI_ENCODING.clone(),
     }
+}
 
+impl<'a> TextObject<'a> {
     /// Set the font and font-size to be used by the following text
     /// operations.
     pub fn set_font(&mut self, font: &FontRef, size: f32) -> io::Result<()> {

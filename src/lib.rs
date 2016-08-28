@@ -168,6 +168,7 @@ impl Pdf {
     {
         let (contents_object_id, content_length, fonts, outline_items) =
             try!(self.write_new_object(move |contents_object_id, pdf| {
+                use canvas::create_canvas;
                 // Guess the ID of the next object. (We’ll assert it below.)
                 try!(write!(pdf.output,
                             "<< /Length {} 0 R >>\n\
@@ -178,9 +179,9 @@ impl Pdf {
                 try!(write!(pdf.output, "/DeviceRGB cs /DeviceRGB CS\n"));
                 let mut fonts = HashMap::new();
                 let mut outline_items: Vec<OutlineItem> = Vec::new();
-                try!(render_contents(&mut Canvas::new(&mut pdf.output,
-                                                      &mut fonts,
-                                                      &mut outline_items)));
+                try!(render_contents(&mut create_canvas(&mut pdf.output,
+                                                        &mut fonts,
+                                                        &mut outline_items)));
                 let end = try!(pdf.tell());
 
                 try!(write!(pdf.output, "endstream\n"));
