@@ -38,8 +38,7 @@ pub trait FontSource: PartialEq + Eq + Hash {
     ///
     /// This is called automatically for each font used in a document.
     /// There should be no need to call this method from user code.
-    fn write_object(&self, pdf: &mut Pdf) -> io::Result<usize>
-        where Self: Sized;
+    fn write_object(&self, pdf: &mut Pdf) -> io::Result<usize>;
 
     /// Get the PDF name of this font.
     ///
