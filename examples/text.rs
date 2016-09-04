@@ -29,7 +29,10 @@ fn main() {
             try!(t.pos(10.0, 300.0));
             try!(t.show("Some lines of text in what might look like a"));
             try!(t.show_line("paragraph of three lines. Lorem ipsum dolor"));
-            t.show_line("sit amet. Blahonga.")
+            try!(t.show_line("sit amet. Blahonga. "));
+            try!(t.show_adjusted(&[("W", 130), ("AN", -40), ("D", 0)]));
+            try!(t.pos(0., -30.));
+            t.show_adjusted(&(-19..21).map(|i| ("o", 16*i)).collect::<Vec<_>>())
         }));
 
         // In Swedish, we use the letters å, ä, and ö

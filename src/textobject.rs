@@ -121,12 +121,37 @@ impl<'a> TextObject<'a> {
         try!(self.output.write_all(b") Tj\n"));
         Ok(())
     }
-    /// TODO This method should have a better name, and take any combination
-    /// of strings as integers as arguments.
-    pub fn show_j(&mut self, text: &str, offset: i32) -> io::Result<()> {
-        try!(self.output.write_all(b"[("));
-        try!(self.output.write_all(&self.encoding.encode_string(text)));
-        write!(self.output, ") {}] TJ\n", offset)
+
+    /// Show one or more text strings, allowing individual glyph positioning.
+    ///
+    /// Each item in param should contain a string to show and a number
+    /// to adjust the position.
+    /// The adjustment is measured in thousands of unit of text space.
+    /// Positive adjustment brings letters closer, negative widens the gap.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use pdf::{Pdf, BuiltinFont, FontSource};
+    /// # use pdf::graphicsstate::Matrix;
+    /// # let mut document = Pdf::create("foo.pdf").unwrap();
+    /// # document.render_page(180.0, 240.0, |canvas| {
+    /// # let serif = canvas.get_font(BuiltinFont::Times_Roman);
+    /// # canvas.text(|t| {
+    /// #    try!(t.set_font(&serif, 14.0));
+    /// t.show_adjusted(&[("W", 130), ("AN", -40), ("D", 0)])
+    /// # })
+    /// # }).unwrap();
+    /// # document.finish().unwrap();
+    /// ```
+    pub fn show_adjusted(&mut self, param: &[(&str, i32)]) -> io::Result<()> {
+        try!(self.output.write_all(b"["));
+        for &(text, offset) in param {
+            try!(self.output.write_all(b"("));
+            try!(self.output.write_all(&self.encoding.encode_string(text)));
+            try!(write!(self.output, ") {} ", offset))
+        }
+        write!(self.output, "] TJ\n")
     }
     /// Show a text as a line.  See also [set_leading](#method.set_leading).
     pub fn show_line(&mut self, text: &str) -> io::Result<()> {
