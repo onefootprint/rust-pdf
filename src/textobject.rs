@@ -7,7 +7,8 @@ use graphicsstate::Color;
 /// A text object is where text is put on the canvas.
 ///
 /// A TextObject should never be created directly by the user.
-/// Instead, the [text](struct.Canvas.html#method.text) method on a Canvas object should be called.
+/// Instead, the [Canvas.text](struct.Canvas.html#method.text) method
+/// should be called.
 /// It will create a TextObject and call a callback, before terminating
 /// the text object properly.
 ///

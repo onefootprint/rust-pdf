@@ -36,9 +36,7 @@ impl FontMetrics {
         for &(c, w) in data {
             widths.insert(c, w);
         }
-        FontMetrics {
-            widths: widths
-        }
+        FontMetrics { widths: widths }
     }
 
     /// Get the width of a specific character.

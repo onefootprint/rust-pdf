@@ -108,7 +108,7 @@ impl Pdf {
     /// Create a new PDF document, writing to `output`.
     pub fn new(output: File) -> io::Result<Pdf> {
         let mut output = output; // Strange but needed
-        // FIXME: Find out the lowest version that contains the features we’re using.
+        // TODO Maybe use a lower version?  Possibly decide by features used?
         try!(output.write_all(b"%PDF-1.7\n%\xB5\xED\xAE\xFB\n"));
         Ok(Pdf {
             output: output,
@@ -192,43 +192,43 @@ impl Pdf {
             write!(pdf.output, "{}\n", content_length)
         }));
 
-        let mut font_object_ids: HashMap<FontRef, usize> = HashMap::new();
+        let mut font_oids: HashMap<FontRef, usize> = HashMap::new();
         for (src, r) in &fonts {
             if let Some(&object_id) = self.all_font_object_ids.get(&src) {
-                font_object_ids.insert(r.clone(), object_id);
+                font_oids.insert(r.clone(), object_id);
             } else {
                 let object_id = try!(src.write_object(self));
-                font_object_ids.insert(r.clone(), object_id);
+                font_oids.insert(r.clone(), object_id);
                 self.all_font_object_ids.insert(*src, object_id);
             }
         }
-        let page_object_id = try!(self.write_new_object(|page_object_id,
-                                                         pdf| {
-            try!(write!(pdf.output,
-                        "<< /Type /Page\n   \
-                            /Parent {parent} 0 R\n   \
-                            /Resources << /Font << {fontrefs}>> >>\n   \
-                            /MediaBox [ 0 0 {width} {height} ]\n   \
-                            /Contents {c_oid} 0 R\n\
-                         >>\n",
-                        parent = PAGES_OBJECT_ID,
-                        fontrefs = font_object_ids
-                            .iter()
-                            .map(|(r, id)| format!("{} {} 0 R ", r, id))
-                            .collect::<String>(),
-                        width = width,
-                        height = height,
-                        c_oid = contents_object_id));
-            Ok(page_object_id)
+        let page_oid = try!(self.write_new_object(|page_oid, pdf| {
+            write!(pdf.output,
+                   "<< /Type /Page\n   \
+                       /Parent {parent} 0 R\n   \
+                       /Resources << /Font << {fonts}>> >>\n   \
+                       /MediaBox [ 0 0 {width} {height} ]\n   \
+                       /Contents {c_oid} 0 R\n\
+                    >>\n",
+                   parent = PAGES_OBJECT_ID,
+                   fonts = font_oids.iter()
+                                    .map(|(r, id)| {
+                                        format!("{} {} 0 R ", r, id)
+                                    })
+                                    .collect::<String>(),
+                   width = width,
+                   height = height,
+                   c_oid = contents_object_id)
+                .map(|_| page_oid)
         }));
         // Take the outline_items from this page, mark them with the page ref,
         // and save them for the document outline.
         for i in &outline_items {
             let mut item = i.clone();
-            item.set_page(page_object_id);
+            item.set_page(page_oid);
             self.outline_items.push(item);
         }
-        self.page_objects_ids.push(page_object_id);
+        self.page_objects_ids.push(page_oid);
         Ok(())
     }
 
@@ -261,7 +261,7 @@ impl Pdf {
                           -> io::Result<(T, i64)>
         where F: FnOnce(&mut Pdf) -> io::Result<T>
     {
-        // `as i64` here would only overflow for PDF files bigger than 2**63 bytes
+        // `as i64` here would overflow for PDF files bigger than 2**63 bytes
         let offset = try!(self.tell()) as i64;
         try!(write!(self.output, "{} 0 obj\n", id));
         let result = try!(write_content(self));
@@ -274,18 +274,16 @@ impl Pdf {
     /// the xref list, the trailer object and the startxref position.
     pub fn finish(mut self) -> io::Result<()> {
         try!(self.write_object_with_id(PAGES_OBJECT_ID, |pdf| {
-            try!(write!(pdf.output,
-                        "<< /Type /Pages\n   \
-                         /Count {c}\n   \
-                         /Kids [ ",
-                        c = pdf.page_objects_ids.len()));
-            for &page_object_id in &pdf.page_objects_ids {
-                try!(write!(pdf.output, "{} 0 R ", page_object_id));
-            }
-            try!(write!(pdf.output,
-                        "]\n\
-                         >>\n"));
-            Ok(())
+            write!(pdf.output,
+                   "<< /Type /Pages\n   \
+                       /Count {c}\n   \
+                       /Kids [ {pages}]\n\
+                    >>\n",
+                   c = pdf.page_objects_ids.len(),
+                   pages = pdf.page_objects_ids
+                              .iter()
+                              .map(|id| format!("{} 0 R ", id))
+                              .collect::<String>())
         }));
         let document_info_id = if !self.document_info.is_empty() {
             let info = self.document_info.clone();

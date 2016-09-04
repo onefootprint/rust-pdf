@@ -81,8 +81,9 @@ impl Encoding {
                     result.push(')' as u8)
                 }
                 ch => {
-                    result.push(*self.unicode_to_code.get(&ch)
-                                    .unwrap_or(&('?' as u8)))
+                    result.push(*self.unicode_to_code
+                                     .get(&ch)
+                                     .unwrap_or(&('?' as u8)))
                 }
             }
         }
@@ -300,8 +301,9 @@ lazy_static! {
             enc(':', "colon",          0o072);
             enc(',', "comma",          0o054);
             enc('≅', "congruent",      0o100);
+            // NOTE: copyrightsans and copyrightserif is a single unicode point
             enc('©', "copyrightsans",  0o343);
-            enc('©', "copyrightserif", 0o323); // NOTE: No distinct unicode symbol
+            enc('©', "copyrightserif", 0o323);
             enc('°', "degree",         0o260);
             enc('δ', "delta",          0o144);
             enc('♦', "diamond",        0o250);

@@ -88,9 +88,9 @@ impl Color {
 /// try!(canvas.concat(Matrix::translate(10.0, 24.0)));
 ///
 /// // Matrixes can be combined by multiplication:
-/// try!(canvas.concat(Matrix::translate(45.0, 0.0) * Matrix::rotate_deg(45.0)));
+/// try!(canvas.concat(Matrix::translate(7.0, 0.0) * Matrix::rotate_deg(45.0)));
 /// // ... will be visualy identical to:
-/// try!(canvas.concat(Matrix::translate(45.0, 0.0)));
+/// try!(canvas.concat(Matrix::translate(7.0, 0.0)));
 /// try!(canvas.concat(Matrix::rotate_deg(45.0)));
 /// # Ok(())
 /// # }).unwrap();
@@ -176,13 +176,11 @@ fn assert_unit(m: Matrix) {
 
 #[allow(dead_code)]
 fn diff(a: &[f32; 6], b: &[f32; 6]) -> Option<String> {
-    let large = a.iter().fold(0f32, |x, &y| x.max(y))
-           .max(b.iter().fold(0f32, |x, &y| x.max(y)));
-    let epsilon = 1e-6;
+    let large_a = a.iter().fold(0f32, |x, &y| x.max(y));
+    let large_b = b.iter().fold(0f32, |x, &y| x.max(y));
+    let epsilon = 1e-6 * large_a.max(large_b);
     for i in 0..6 {
-        let aa = a[i];
-        let bb = b[i];
-        if (aa - bb).abs() / large > epsilon {
+        if (a[i] - b[i]).abs() > epsilon {
             return Some(format!("{:?} != {:?}", a, b));
         }
     }
