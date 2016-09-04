@@ -267,11 +267,11 @@ lazy_static! {
             enc('⇒', "arrowdblright",  0o336);
             enc('⇑', "arrowdblup",     0o335);
             enc('↓', "arrowdown",      0o257);
-            // enc('Ε', "arrowhorizex",   0o276); FIXME
+            enc('\u{23af}', "arrowhorizex", 0o276);
             enc('←', "arrowleft",      0o254);
             enc('→', "arrowright",     0o256);
             enc('↑', "arrowup",        0o255);
-            // enc('Ε', "arrowvertex",    0o275); FIXME
+            enc('\u{23d0}', "arrowvertex", 0o275);
             enc('*', "asteriskmath",   0o052);
             enc('|', "bar",            0o175);
             enc('β', "beta",           0o142);
@@ -344,9 +344,10 @@ lazy_static! {
             enc('∨', "logicalor",      0o332);
             enc('◊', "lozenge",        0o340);
             enc('-', "minus",          0o055);
-            // enc('Ε', "minute",         0o242); FIXME
+            enc('\u{2032}', "minute",  0o242); // prime / minutes / feet
             enc('μ', "mu",             0o155);
-            enc('×', "multiply",       0o264); // TODO And ⨯?
+            enc('×', "multiply",       0o264); // small and large in unicode
+            enc('⨯', "multiply",       0o264); // only one in symbol
             enc('9', "nine",           0o071);
             enc('∉', "notelement",     0o317);
             enc('≠', "notequal",       0o271);
@@ -387,7 +388,7 @@ lazy_static! {
             enc('®', "registersans",   0o342);
             enc('®', "registerserif",  0o322); // NOTE No distinct unicode?
             enc('ρ', "rho",            0o162);
-            //enc('Ε', "second",         0o262); FIXME
+            enc('\u{2033}', "second",  0o262); // Double prime/seconds/inches
             enc(';', "semicolon",      0o073);
             enc('7', "seven",          0o067);
             enc('σ', "sigma",          0o163);
