@@ -13,6 +13,6 @@ matrix:
     - rust: nightly
 script:
 - |
-  cargo fmt -- --write-mode=diff &&
+  PATH=${HOME}/.cargo/bin:$PATH cargo fmt -- --write-mode=diff &&
   cargo build &&
   cargo test
