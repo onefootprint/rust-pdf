@@ -1,6 +1,5 @@
-use std::io::{self, Write};
-
 pub use encoding::WIN_ANSI_ENCODING;
+use std::io::{self, Write};
 
 /// An item in the document outline.
 ///

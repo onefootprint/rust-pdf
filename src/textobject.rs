@@ -1,8 +1,7 @@
-use std::io::{self, Write};
-
-use fontref::FontRef;
 use encoding::{Encoding, WIN_ANSI_ENCODING};
+use fontref::FontRef;
 use graphicsstate::Color;
+use std::io::{self, Write};
 
 /// A text object is where text is put on the canvas.
 ///

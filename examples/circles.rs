@@ -1,4 +1,4 @@
-///! Example program drawing circles on a page.
+//! Example program drawing circles on a page.
 extern crate pdf;
 
 use pdf::Pdf;

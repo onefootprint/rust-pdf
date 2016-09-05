@@ -1,7 +1,8 @@
 //! Types for representing details in the graphics state.
+
+use std::f32::consts::PI;
 use std::fmt::{self, Display};
 use std::ops::Mul;
-use std::f32::consts::PI;
 
 /// Line join styles, as described in section 8.4.3.4 of the PDF
 /// specification.
@@ -30,15 +31,9 @@ pub enum CapStyle {
 /// Any color (or grayscale) value that this library can make PDF represent.
 pub enum Color {
     #[doc(hidden)]
-    RGB {
-        red: u8,
-        green: u8,
-        blue: u8,
-    },
+    RGB { red: u8, green: u8, blue: u8 },
     #[doc(hidden)]
-    Gray {
-        gray: u8,
-    },
+    Gray { gray: u8 },
 }
 
 impl Color {

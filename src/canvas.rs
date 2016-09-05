@@ -1,12 +1,11 @@
-use std::io::{self, Write};
-use std::collections::HashMap;
-use std::sync::Arc;
-
-use fontsource::{BuiltinFont, FontSource};
 use fontref::FontRef;
-use outline::OutlineItem;
-use textobject::TextObject;
+use fontsource::{BuiltinFont, FontSource};
 use graphicsstate::*;
+use outline::OutlineItem;
+use std::collections::HashMap;
+use std::io::{self, Write};
+use std::sync::Arc;
+use textobject::TextObject;
 
 /// An visual area where content can be drawn (a page).
 ///

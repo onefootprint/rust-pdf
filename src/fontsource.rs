@@ -1,10 +1,10 @@
+use Pdf;
 use encoding::{Encoding, SYMBOL_ENCODING, WIN_ANSI_ENCODING};
 use fontmetrics::{FontMetrics, get_builtin_metrics};
 use std::cmp::Eq;
 use std::hash::Hash;
 use std::io::{self, Write};
 use std::ops::Add;
-use Pdf;
 
 /// The "Base14" built-in fonts in PDF.
 /// Underscores in these names are hyphens in the real names.

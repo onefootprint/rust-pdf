@@ -82,8 +82,8 @@ impl Encoding {
                 }
                 ch => {
                     result.push(*self.unicode_to_code
-                                     .get(&ch)
-                                     .unwrap_or(&('?' as u8)))
+                        .get(&ch)
+                        .unwrap_or(&('?' as u8)))
                 }
             }
         }

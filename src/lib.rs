@@ -51,10 +51,10 @@ extern crate lazy_static;
 
 extern crate time;
 
-use std::io::{self, Seek, SeekFrom, Write};
-use std::collections::HashMap;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
+use std::fmt;
 use std::fs::File;
+use std::io::{self, Seek, SeekFrom, Write};
 
 mod fontsource;
 pub use fontsource::{BuiltinFont, FontSource};
@@ -192,7 +192,7 @@ impl Pdf {
             write!(pdf.output, "{}\n", content_length)
         }));
 
-        let mut font_oids: HashMap<FontRef, usize> = HashMap::new();
+        let mut font_oids = NamedRefs::new();
         for (src, r) in &fonts {
             if let Some(&object_id) = self.all_font_object_ids.get(&src) {
                 font_oids.insert(r.clone(), object_id);
@@ -202,25 +202,8 @@ impl Pdf {
                 self.all_font_object_ids.insert(*src, object_id);
             }
         }
-        let page_oid = try!(self.write_new_object(|page_oid, pdf| {
-            write!(pdf.output,
-                   "<< /Type /Page\n   \
-                       /Parent {parent} 0 R\n   \
-                       /Resources << /Font << {fonts}>> >>\n   \
-                       /MediaBox [ 0 0 {width} {height} ]\n   \
-                       /Contents {c_oid} 0 R\n\
-                    >>\n",
-                   parent = PAGES_OBJECT_ID,
-                   fonts = font_oids.iter()
-                                    .map(|(r, id)| {
-                                        format!("{} {} 0 R ", r, id)
-                                    })
-                                    .collect::<String>(),
-                   width = width,
-                   height = height,
-                   c_oid = contents_object_id)
-                .map(|_| page_oid)
-        }));
+        let page_oid = try!(self.write_page_dict(contents_object_id,
+                                                 width, height, font_oids));
         // Take the outline_items from this page, mark them with the page ref,
         // and save them for the document outline.
         for i in &outline_items {
@@ -232,13 +215,35 @@ impl Pdf {
         Ok(())
     }
 
+    fn write_page_dict(&mut self,
+                       content_oid: usize,
+                       width: f32,
+                       height: f32,
+                       font_oids: NamedRefs)
+                       -> io::Result<usize> {
+        self.write_new_object(|page_oid, pdf| {
+            write!(pdf.output,
+                   "<< /Type /Page\n   \
+                       /Parent {parent} 0 R\n   \
+                       /Resources << /Font << {fonts}>> >>\n   \
+                       /MediaBox [ 0 0 {width} {height} ]\n   \
+                       /Contents {c_oid} 0 R\n\
+                    >>\n",
+                   parent = PAGES_OBJECT_ID,
+                   fonts = font_oids,
+                   width = width,
+                   height = height,
+                   c_oid = content_oid)
+                .map(|_| page_oid)
+        })
+    }
+
     fn write_new_object<F, T>(&mut self, write_content: F) -> io::Result<T>
         where F: FnOnce(usize, &mut Pdf) -> io::Result<T>
     {
         let id = self.object_offsets.len();
-        let (result, offset) = try!(self.write_object(id, |pdf| {
-            write_content(id, pdf)
-        }));
+        let (result, offset) =
+            try!(self.write_object(id, |pdf| write_content(id, pdf)));
         self.object_offsets.push(offset);
         Ok(result)
     }
@@ -281,9 +286,9 @@ impl Pdf {
                     >>\n",
                    c = pdf.page_objects_ids.len(),
                    pages = pdf.page_objects_ids
-                              .iter()
-                              .map(|id| format!("{} 0 R ", id))
-                              .collect::<String>())
+                       .iter()
+                       .map(|id| format!("{} 0 R ", id))
+                       .collect::<String>())
         }));
         let document_info_id = if !self.document_info.is_empty() {
             let info = self.document_info.clone();
@@ -306,52 +311,7 @@ impl Pdf {
             None
         };
 
-        let outlines_id = if !self.outline_items.is_empty() {
-            let parent_id = self.object_offsets.len();
-            self.object_offsets.push(-1);
-            let count = self.outline_items.len();
-            let mut first_id = 0;
-            let mut last_id = 0;
-            let items = self.outline_items.clone();
-            for (i, item) in items.iter().enumerate() {
-                let (is_first, is_last) = (i == 0, i == count - 1);
-                let id = try!(self.write_new_object(|object_id, pdf| {
-                    item.write_dictionary(&mut pdf.output,
-                                          parent_id,
-                                          if is_first {
-                                              None
-                                          } else {
-                                              Some(object_id - 1)
-                                          },
-                                          if is_last {
-                                              None
-                                          } else {
-                                              Some(object_id + 1)
-                                          })
-                        .and(Ok(object_id))
-                }));
-                if is_first {
-                    first_id = id;
-                }
-                if is_last {
-                    last_id = id;
-                }
-            }
-            try!(self.write_object_with_id(parent_id, |pdf| {
-                write!(pdf.output,
-                       "<< /Type /Outlines\n   \
-                           /First {first} 0 R\n   \
-                           /Last {last} 0 R\n   \
-                           /Count {count}\n\
-                        >>\n",
-                       last = last_id,
-                       first = first_id,
-                       count = count)
-            }));
-            Some(parent_id)
-        } else {
-            None
-        };
+        let outlines_id = try!(self.write_outlines());
 
         try!(self.write_object_with_id(ROOT_OBJECT_ID, |pdf| {
             try!(write!(pdf.output,
@@ -391,6 +351,78 @@ impl Pdf {
                      {}\n\
                      %%EOF\n",
                     startxref));
+        Ok(())
+    }
+
+    fn write_outlines(&mut self) -> io::Result<Option<usize>> {
+        if self.outline_items.is_empty() {
+            return Ok(None);
+        }
+
+        let parent_id = self.object_offsets.len();
+        self.object_offsets.push(-1);
+        let count = self.outline_items.len();
+        let mut first_id = 0;
+        let mut last_id = 0;
+        let items = self.outline_items.clone();
+        for (i, item) in items.iter().enumerate() {
+            let (is_first, is_last) = (i == 0, i == count - 1);
+            let id = try!(self.write_new_object(|object_id, pdf| {
+                item.write_dictionary(&mut pdf.output,
+                                      parent_id,
+                                      if is_first {
+                                          None
+                                      } else {
+                                          Some(object_id - 1)
+                                      },
+                                      if is_last {
+                                          None
+                                      } else {
+                                          Some(object_id + 1)
+                                      })
+                    .and(Ok(object_id))
+            }));
+            if is_first {
+                first_id = id;
+            }
+            if is_last {
+                last_id = id;
+            }
+        }
+        try!(self.write_object_with_id(parent_id, |pdf| {
+            write!(pdf.output,
+                   "<< /Type /Outlines\n   \
+                    /First {first} 0 R\n   \
+                    /Last {last} 0 R\n   \
+                    /Count {count}\n\
+                    >>\n",
+                   last = last_id,
+                   first = first_id,
+                   count = count)
+        }));
+        Ok(Some(parent_id))
+    }
+}
+
+struct NamedRefs {
+    oids: HashMap<FontRef, usize>,
+}
+
+impl NamedRefs {
+    fn new() -> Self {
+        NamedRefs { oids: HashMap::new() }
+    }
+    fn insert(&mut self, name: FontRef, oid: usize) -> Option<usize> {
+        self.oids.insert(name, oid)
+    }
+}
+
+
+impl fmt::Display for NamedRefs {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        for (name, id) in self.oids.iter() {
+            try!(write!(f, "{} {} 0 R ", name, id));
+        }
         Ok(())
     }
 }

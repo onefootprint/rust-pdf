@@ -1,8 +1,7 @@
+use encoding::Encoding;
+use fontmetrics::FontMetrics;
 use std::fmt;
 use std::sync::Arc;
-
-use fontmetrics::FontMetrics;
-use encoding::Encoding;
 
 /// A font ready to be used in a TextObject.
 ///

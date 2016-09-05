@@ -1,4 +1,4 @@
-///! Example program drawing some text on a page.
+//! Example program drawing some text on a page.
 extern crate pdf;
 
 use pdf::{Pdf, BuiltinFont};
