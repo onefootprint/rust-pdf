@@ -35,18 +35,18 @@ fn write_cond(f: &mut File, name: &str, encoding: &Encoding) -> Result<()> {
 fn main() {
     let dst = Path::new(&env::var("OUT_DIR").unwrap()).join("metrics_data.rs");
     let mut f = &mut File::create(&dst).unwrap();
-    let textfonts = vec!["Courier", "Courier_Bold",
-                         "Courier_Oblique", "Courier_BoldOblique",
-                         "Helvetica", "Helvetica_Bold",
-                         "Helvetica_Oblique", "Helvetica_BoldOblique",
-                         "Times_Roman", "Times_Bold",
-                         "Times_Italic", "Times_BoldItalic"];
+    let textfonts = ["Courier", "Courier_Bold",
+                     "Courier_Oblique", "Courier_BoldOblique",
+                     "Helvetica", "Helvetica_Bold",
+                     "Helvetica_Oblique", "Helvetica_BoldOblique",
+                     "Times_Roman", "Times_Bold",
+                     "Times_Italic", "Times_BoldItalic"];
     writeln!(f,
              "pub fn get_builtin_metrics(font: &BuiltinFont) \
               -> &'static FontMetrics {{\n\
               match *font {{")
         .unwrap();
-    for font in textfonts.iter().chain(vec!["Symbol", "ZapfDingbats"].iter()) {
+    for font in textfonts.iter().chain(["Symbol", "ZapfDingbats"].iter()) {
         writeln!(f,
                  "BuiltinFont::{} => METRICS_{}.deref(),",
                  font,
@@ -58,7 +58,7 @@ fn main() {
               }}\n\
               lazy_static! {{")
         .unwrap();
-    for font in textfonts {
+    for font in textfonts.iter() {
         write_cond(f, font, &WIN_ANSI_ENCODING).unwrap();
     }
     write_cond(f, "Symbol", &SYMBOL_ENCODING).unwrap();
