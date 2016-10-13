@@ -48,7 +48,7 @@ fn main() {
         .unwrap();
     for font in textfonts.iter().chain(["Symbol", "ZapfDingbats"].iter()) {
         writeln!(f,
-                 "BuiltinFont::{} => METRICS_{}.deref(),",
+                 "BuiltinFont::{} => &METRICS_{},",
                  font,
                  font.to_uppercase())
             .unwrap();
