@@ -18,15 +18,17 @@ function error {
   exit 1
 }
 
-echo Testing ...
+date +'%F %T: Testing ...'
 cargo test > $LOG 2>&1 || error
 
-echo Comitting the relase ...
+date +'%F %T: Comitting the release ...'
 git add Cargo.toml README.md
 git commit -m "Release $VERSION"
 git tag -a v$VERSION
 git push --all
 git push --tags
 
-echo "Publishing the release to crates.io ..."
+date +'%F %T: Publishing the release to crates.io ...'
 cargo publish
+
+date +"%F %T: Release $VERSION done."
