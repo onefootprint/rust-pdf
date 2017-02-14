@@ -14,8 +14,8 @@ use std::io::{self, Write};
 /// # Example
 ///
 /// ```
-/// # use pdf::{Pdf, BuiltinFont, FontSource};
-/// # use pdf::graphicsstate::Matrix;
+/// # use pdf_canvas::{Pdf, BuiltinFont, FontSource};
+/// # use pdf_canvas::graphicsstate::Matrix;
 /// # let mut document = Pdf::create("foo.pdf").unwrap();
 /// # document.render_page(180.0, 240.0, |canvas| {
 /// let serif = canvas.get_font(BuiltinFont::Times_Roman);
@@ -131,8 +131,8 @@ impl<'a> TextObject<'a> {
     /// # Example
     ///
     /// ```
-    /// # use pdf::{Pdf, BuiltinFont, FontSource};
-    /// # use pdf::graphicsstate::Matrix;
+    /// # use pdf_canvas::{Pdf, BuiltinFont, FontSource};
+    /// # use pdf_canvas::graphicsstate::Matrix;
     /// # let mut document = Pdf::create("foo.pdf").unwrap();
     /// # document.render_page(180.0, 240.0, |canvas| {
     /// # let serif = canvas.get_font(BuiltinFont::Times_Roman);

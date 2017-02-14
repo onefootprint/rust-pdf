@@ -1,8 +1,8 @@
 ///! Example program drawing mandalas on a page.
-extern crate pdf;
+extern crate pdf_canvas;
 
-use pdf::Pdf;
-use pdf::graphicsstate::{Color, Matrix};
+use pdf_canvas::Pdf;
+use pdf_canvas::graphicsstate::{Color, Matrix};
 use std::env;
 use std::f32::consts::PI;
 

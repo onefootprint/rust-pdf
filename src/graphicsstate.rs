@@ -41,7 +41,7 @@ impl Color {
 
     /// # Example
     /// ````
-    /// # use pdf::graphicsstate::Color;
+    /// # use pdf_canvas::graphicsstate::Color;
     /// let white  = Color::rgb(255, 255, 255);
     /// let black  = Color::rgb(0, 0, 0);
     /// let red    = Color::rgb(255, 0, 0);
@@ -59,7 +59,7 @@ impl Color {
 
     /// # Example
     /// ````
-    /// # use pdf::graphicsstate::Color;
+    /// # use pdf_canvas::graphicsstate::Color;
     /// let white = Color::gray(255);
     /// let gray  = Color::gray(128);
     /// ````
@@ -76,8 +76,8 @@ impl Color {
 /// # Examples
 ///
 /// ```
-/// # use pdf::{Pdf, BuiltinFont, FontSource};
-/// # use pdf::graphicsstate::Matrix;
+/// # use pdf_canvas::{Pdf, BuiltinFont, FontSource};
+/// # use pdf_canvas::graphicsstate::Matrix;
 /// # let mut document = Pdf::create("foo.pdf").unwrap();
 /// # document.render_page(180.0, 240.0, |canvas| {
 /// try!(canvas.concat(Matrix::translate(10.0, 24.0)));

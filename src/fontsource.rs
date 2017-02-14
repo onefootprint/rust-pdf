@@ -44,7 +44,7 @@ pub trait FontSource: PartialEq + Eq + Hash {
     ///
     /// # Examples
     /// ```
-    /// use pdf::{BuiltinFont, FontSource};
+    /// use pdf_canvas::{BuiltinFont, FontSource};
     /// assert_eq!("Times-Roman", BuiltinFont::Times_Roman.pdf_name());
     /// ```
     fn pdf_name(&self) -> String;
@@ -56,7 +56,7 @@ pub trait FontSource: PartialEq + Eq + Hash {
     ///
     /// # Examples
     /// ```
-    /// use pdf::{BuiltinFont, FontSource};
+    /// use pdf_canvas::{BuiltinFont, FontSource};
     /// let proportional = BuiltinFont::Helvetica;
     /// assert_eq!(62.004, proportional.get_width(12.0, "Hello World"));
     /// let fixed = BuiltinFont::Courier;
@@ -69,7 +69,7 @@ pub trait FontSource: PartialEq + Eq + Hash {
     ///
     /// # Examples
     /// ```
-    /// use pdf::{BuiltinFont, FontSource};
+    /// use pdf_canvas::{BuiltinFont, FontSource};
     /// assert_eq!(5167, BuiltinFont::Helvetica.get_width_raw("Hello World"));
     /// assert_eq!(600, BuiltinFont::Courier.get_width_raw("A"));
     /// ```

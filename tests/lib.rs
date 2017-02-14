@@ -1,6 +1,6 @@
-extern crate pdf;
+extern crate pdf_canvas;
 
-use pdf::{FontSource, BuiltinFont};
+use pdf_canvas::{FontSource, BuiltinFont};
 
 
 fn is_close(a: f32, b: f32) -> bool {

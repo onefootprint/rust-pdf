@@ -9,7 +9,7 @@ fonts are supported.
 To use this library, add it as a dependency in your `Cargo.toml`:
 
     [dependencies]
-    pdf = "*"
+    pdf-canvas = "*"
 
 The API is still very alpha, usage may change.
 Some examples, that should work with the version containing them, can

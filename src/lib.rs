@@ -8,8 +8,8 @@
 //! # Example
 //!
 //! ```
-//! use pdf::{Pdf, BuiltinFont, FontSource};
-//! use pdf::graphicsstate::Color;
+//! use pdf_canvas::{Pdf, BuiltinFont, FontSource};
+//! use pdf_canvas::graphicsstate::Color;
 //!
 //! let mut document = Pdf::create("example.pdf")
 //!     .expect("Create pdf file");

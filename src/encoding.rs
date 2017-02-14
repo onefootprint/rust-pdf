@@ -9,7 +9,7 @@ use std::collections::BTreeMap;
 ///
 /// # Example
 /// ````
-/// use pdf::{BuiltinFont, FontSource};
+/// use pdf_canvas::{BuiltinFont, FontSource};
 /// assert_eq!("WinAnsiEncoding",
 ///            BuiltinFont::Helvetica.get_encoding().get_name());
 /// assert_eq!("SymbolEncoding",
@@ -34,7 +34,7 @@ impl Encoding {
     ///
     /// # Example
     /// ````
-    /// use pdf::{BuiltinFont, FontSource};
+    /// use pdf_canvas::{BuiltinFont, FontSource};
     /// let enc = BuiltinFont::Helvetica.get_encoding();
     /// assert_eq!(Some(32),  enc.get_code("space"));
     /// assert_eq!(Some(65),  enc.get_code("A"));
@@ -53,7 +53,7 @@ impl Encoding {
     /// Convert a rust string to a vector of bytes in the encoding.
     /// # Example
     /// ````
-    /// use pdf::{BuiltinFont, FontSource};
+    /// use pdf_canvas::{BuiltinFont, FontSource};
     /// let enc = BuiltinFont::Helvetica.get_encoding();
     /// let symb_enc = BuiltinFont::Symbol.get_encoding();
     /// assert_eq!(vec!(65, 66, 67), enc.encode_string("ABC"));
