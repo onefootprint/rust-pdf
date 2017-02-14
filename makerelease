@@ -22,7 +22,7 @@ date +'%F %T: Testing ...'
 cargo test > $LOG 2>&1 || error
 
 date +'%F %T: Comitting the release ...'
-git add Cargo.toml README.md
+git add Cargo.toml
 git commit -m "Release $VERSION"
 git tag -a v$VERSION
 git push --all
