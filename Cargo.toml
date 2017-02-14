@@ -1,6 +1,6 @@
 [package]
 name = "pdf-canvas"
-version = "0.5.2"
+version = "0.5.4"
 authors = ["Simon Sapin <simon.sapin@exyr.org>",
 	   "Rasmus Kaj <rasmus@krats.se>"]
 license = "MIT"
