@@ -4,7 +4,7 @@ use pdf_canvas::{FontSource, BuiltinFont};
 
 
 fn is_close(a: f32, b: f32) -> bool {
-    let comparision = (a - b).abs() / (a.abs()+b.abs());
+    let comparision = (a - b).abs() / (a.abs() + b.abs());
     println!("Checking if {} and {} is close: {}", a, b, comparision);
     comparision < 1e-7
 }
