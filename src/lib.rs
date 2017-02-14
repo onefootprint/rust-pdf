@@ -39,7 +39,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! pdf = "*"
+//! pdf-canvas = "*"
 //! ```
 //!
 //! Some more working usage examples exists in [the examples directory]
