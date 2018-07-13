@@ -21,10 +21,11 @@ pub struct Canvas<'a> {
 }
 
 // Should not be called by user code.
-pub fn create_canvas<'a>(output: &'a mut Write,
-                         fonts: &'a mut HashMap<BuiltinFont, FontRef>,
-                         outline_items: &'a mut Vec<OutlineItem>)
-                         -> Canvas<'a> {
+pub fn create_canvas<'a>(
+    output: &'a mut Write,
+    fonts: &'a mut HashMap<BuiltinFont, FontRef>,
+    outline_items: &'a mut Vec<OutlineItem>,
+) -> Canvas<'a> {
     Canvas {
         output: output,
         fonts: fonts,
@@ -35,33 +36,41 @@ pub fn create_canvas<'a>(output: &'a mut Write,
 impl<'a> Canvas<'a> {
     /// Append a closed rectangle with a corner at (x, y) and
     /// extending width × height to the to the current path.
-    pub fn rectangle(&mut self,
-                     x: f32,
-                     y: f32,
-                     width: f32,
-                     height: f32)
-                     -> io::Result<()> {
+    pub fn rectangle(
+        &mut self,
+        x: f32,
+        y: f32,
+        width: f32,
+        height: f32,
+    ) -> io::Result<()> {
         write!(self.output, "{} {} {} {} re\n", x, y, width, height)
     }
     /// Set the line join style in the graphics state.
-    pub fn set_line_join_style(&mut self, style: JoinStyle) -> io::Result<()> {
-        write!(self.output,
-               "{} j\n",
-               match style {
-                   JoinStyle::Miter => 0,
-                   JoinStyle::Round => 1,
-                   JoinStyle::Bevel => 2,
-               })
+    pub fn set_line_join_style(
+        &mut self,
+        style: JoinStyle,
+    ) -> io::Result<()> {
+        write!(
+            self.output,
+            "{} j\n",
+            match style {
+                JoinStyle::Miter => 0,
+                JoinStyle::Round => 1,
+                JoinStyle::Bevel => 2,
+            }
+        )
     }
     /// Set the line join style in the graphics state.
     pub fn set_line_cap_style(&mut self, style: CapStyle) -> io::Result<()> {
-        write!(self.output,
-               "{} J\n",
-               match style {
-                   CapStyle::Butt => 0,
-                   CapStyle::Round => 1,
-                   CapStyle::ProjectingSquare => 2,
-               })
+        write!(
+            self.output,
+            "{} J\n",
+            match style {
+                CapStyle::Butt => 0,
+                CapStyle::Round => 1,
+                CapStyle::ProjectingSquare => 2,
+            }
+        )
     }
     /// Set the line width in the graphics state.
     pub fn set_line_width(&mut self, w: f32) -> io::Result<()> {
@@ -71,13 +80,13 @@ impl<'a> Canvas<'a> {
     pub fn set_stroke_color(&mut self, color: Color) -> io::Result<()> {
         let norm = |c| c as f32 / 255.0;
         match color {
-            Color::RGB { red, green, blue } => {
-                write!(self.output,
-                       "{} {} {} SC\n",
-                       norm(red),
-                       norm(green),
-                       norm(blue))
-            }
+            Color::RGB { red, green, blue } => write!(
+                self.output,
+                "{} {} {} SC\n",
+                norm(red),
+                norm(green),
+                norm(blue),
+            ),
             Color::Gray { gray } => write!(self.output, "{} G\n", norm(gray)),
         }
     }
@@ -85,13 +94,13 @@ impl<'a> Canvas<'a> {
     pub fn set_fill_color(&mut self, color: Color) -> io::Result<()> {
         let norm = |c| c as f32 / 255.0;
         match color {
-            Color::RGB { red, green, blue } => {
-                write!(self.output,
-                       "{} {} {} sc\n",
-                       norm(red),
-                       norm(green),
-                       norm(blue))
-            }
+            Color::RGB { red, green, blue } => write!(
+                self.output,
+                "{} {} {} sc\n",
+                norm(red),
+                norm(green),
+                norm(blue),
+            ),
             Color::Gray { gray } => write!(self.output, "{} g\n", norm(gray)),
         }
     }
@@ -103,12 +112,13 @@ impl<'a> Canvas<'a> {
     }
 
     /// Append a straight line from (x1, y1) to (x2, y2) to the current path.
-    pub fn line(&mut self,
-                x1: f32,
-                y1: f32,
-                x2: f32,
-                y2: f32)
-                -> io::Result<()> {
+    pub fn line(
+        &mut self,
+        x1: f32,
+        y1: f32,
+        x2: f32,
+        y2: f32,
+    ) -> io::Result<()> {
         try!(self.move_to(x1, y1));
         self.line_to(x2, y2)
     }
@@ -123,14 +133,15 @@ impl<'a> Canvas<'a> {
     }
     /// Add an Bézier curve from the current point to (x3, y3) with
     /// (x1, y1) and (x2, y2) as Bézier controll points.
-    pub fn curve_to(&mut self,
-                    x1: f32,
-                    y1: f32,
-                    x2: f32,
-                    y2: f32,
-                    x3: f32,
-                    y3: f32)
-                    -> io::Result<()> {
+    pub fn curve_to(
+        &mut self,
+        x1: f32,
+        y1: f32,
+        x2: f32,
+        y2: f32,
+        x3: f32,
+        y3: f32,
+    ) -> io::Result<()> {
         write!(self.output, "{} {} {} {} {} {} c\n", x1, y1, x2, y2, x3, y3)
     }
     /// Add a circle approximated by four cubic Bézier curves to the
@@ -172,9 +183,11 @@ impl<'a> Canvas<'a> {
         self.fonts
             .entry(font)
             .or_insert_with(|| {
-                create_font_ref(next_n,
-                                font.get_encoding(),
-                                Arc::new(font.get_metrics()))
+                create_font_ref(
+                    next_n,
+                    font.get_encoding(),
+                    Arc::new(font.get_metrics()),
+                )
             })
             .clone()
     }
@@ -186,7 +199,8 @@ impl<'a> Canvas<'a> {
     /// an argument.
     /// On success, return the value returned by render_text.
     pub fn text<F, T>(&mut self, render_text: F) -> io::Result<T>
-        where F: FnOnce(&mut TextObject) -> io::Result<T>
+    where
+        F: FnOnce(&mut TextObject) -> io::Result<T>,
     {
         use textobject::create_text_object;
         try!(write!(self.output, "BT\n"));
@@ -195,13 +209,14 @@ impl<'a> Canvas<'a> {
         Ok(result)
     }
     /// Utility method for placing a string of text.
-    pub fn left_text(&mut self,
-                     x: f32,
-                     y: f32,
-                     font: BuiltinFont,
-                     size: f32,
-                     text: &str)
-                     -> io::Result<()> {
+    pub fn left_text(
+        &mut self,
+        x: f32,
+        y: f32,
+        font: BuiltinFont,
+        size: f32,
+        text: &str,
+    ) -> io::Result<()> {
         let font = self.get_font(font);
         self.text(|t| {
             try!(t.set_font(&font, size));
@@ -210,13 +225,14 @@ impl<'a> Canvas<'a> {
         })
     }
     /// Utility method for placing a string of text.
-    pub fn right_text(&mut self,
-                      x: f32,
-                      y: f32,
-                      font: BuiltinFont,
-                      size: f32,
-                      text: &str)
-                      -> io::Result<()> {
+    pub fn right_text(
+        &mut self,
+        x: f32,
+        y: f32,
+        font: BuiltinFont,
+        size: f32,
+        text: &str,
+    ) -> io::Result<()> {
         let font = self.get_font(font);
         self.text(|t| {
             let text_width = font.get_width(size, text);
@@ -226,13 +242,14 @@ impl<'a> Canvas<'a> {
         })
     }
     /// Utility method for placing a string of text.
-    pub fn center_text(&mut self,
-                       x: f32,
-                       y: f32,
-                       font: BuiltinFont,
-                       size: f32,
-                       text: &str)
-                       -> io::Result<()> {
+    pub fn center_text(
+        &mut self,
+        x: f32,
+        y: f32,
+        font: BuiltinFont,
+        size: f32,
+        text: &str,
+    ) -> io::Result<()> {
         let font = self.get_font(font);
         self.text(|t| {
             let text_width = font.get_width(size, text);

@@ -25,10 +25,11 @@ pub struct FontRef {
 }
 
 // Should not be called by user code.
-pub fn create_font_ref(n: usize,
-                       encoding: Encoding,
-                       metrics: Arc<FontMetrics>)
-                       -> FontRef {
+pub fn create_font_ref(
+    n: usize,
+    encoding: Encoding,
+    metrics: Arc<FontMetrics>,
+) -> FontRef {
     FontRef {
         n: n,
         encoding: encoding,

@@ -1,10 +1,10 @@
-use Pdf;
 use encoding::{Encoding, SYMBOL_ENCODING, WIN_ANSI_ENCODING};
-use fontmetrics::{FontMetrics, get_builtin_metrics};
+use fontmetrics::{get_builtin_metrics, FontMetrics};
 use std::cmp::Eq;
 use std::hash::Hash;
 use std::io::{self, Write};
 use std::ops::Add;
+use Pdf;
 
 /// The "Base14" built-in fonts in PDF.
 /// Underscores in these names are hyphens in the real names.
@@ -26,7 +26,6 @@ pub enum BuiltinFont {
     Symbol,
     ZapfDingbats,
 }
-
 
 /// This trait is implemented by any kind of font that the pdf library
 /// supports.
@@ -85,11 +84,13 @@ impl FontSource for BuiltinFont {
         // require a stream for the actual font, and probably another
         // object for metrics etc
         pdf.write_new_object(|font_object_id, pdf| {
-            try!(write!(pdf.output,
-                        "<< /Type /Font /Subtype /Type1 /BaseFont /{} \
-                         /Encoding /{} >>\n",
-                        self.pdf_name(),
-                        self.get_encoding().get_name()));
+            try!(write!(
+                pdf.output,
+                "<< /Type /Font /Subtype /Type1 /BaseFont /{} \
+                 /Encoding /{} >>\n",
+                self.pdf_name(),
+                self.get_encoding().get_name(),
+            ));
             Ok(font_object_id)
         })
     }

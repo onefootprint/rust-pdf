@@ -1,8 +1,8 @@
 //! Example program drawing circles on a page.
 extern crate pdf_canvas;
 
-use pdf_canvas::Pdf;
 use pdf_canvas::graphicsstate::Color;
+use pdf_canvas::Pdf;
 use std::f32::consts::PI;
 
 /// Create a `circles.pdf` file, with a single page containg a circle
@@ -22,7 +22,8 @@ fn main() {
     // argument of the render_page method.
     // That function then puts content on the page by calling methods
     // on the canvas.
-    document.render_page(400.0, 400.0, |c| {
+    document
+        .render_page(400.0, 400.0, |c| {
             let (x, y) = (200.0, 200.0);
             let r = 190.0;
 

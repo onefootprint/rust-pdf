@@ -1,8 +1,8 @@
 ///! Example program drawing mandalas on a page.
 extern crate pdf_canvas;
 
-use pdf_canvas::Pdf;
 use pdf_canvas::graphicsstate::{Color, Matrix};
+use pdf_canvas::Pdf;
 use std::env;
 use std::f32::consts::PI;
 
@@ -14,7 +14,8 @@ fn main() {
     let n: u8 = args.next().map(|s| s.parse().expect("number")).unwrap_or(7);
 
     // Render a page with something resembling a mandala on it.
-    document.render_page(600.0, 600.0, |c| {
+    document
+        .render_page(600.0, 600.0, |c| {
             try!(c.concat(Matrix::translate(300., 300.)));
             try!(c.set_stroke_color(Color::gray(0)));
             let segment = 2. * PI / n as f32;

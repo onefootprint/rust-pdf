@@ -98,11 +98,15 @@ pub struct Matrix {
 impl Matrix {
     /// Construct a matrix for translation
     pub fn translate(dx: f32, dy: f32) -> Self {
-        Matrix { v: [1., 0., 0., 1., dx, dy] }
+        Matrix {
+            v: [1., 0., 0., 1., dx, dy],
+        }
     }
     /// Construct a matrix for rotating by `a` radians.
     pub fn rotate(a: f32) -> Self {
-        Matrix { v: [a.cos(), a.sin(), -a.sin(), a.cos(), 0., 0.] }
+        Matrix {
+            v: [a.cos(), a.sin(), -a.sin(), a.cos(), 0., 0.],
+        }
     }
     /// Construct a matrix for rotating by `a` degrees.
     pub fn rotate_deg(a: f32) -> Self {
@@ -111,7 +115,9 @@ impl Matrix {
     /// Construct a matrix for scaling by factor `sx` in x-direction
     /// and by `sy` in y-direction.
     pub fn scale(sx: f32, sy: f32) -> Self {
-        Matrix { v: [sx, 0., 0., sy, 0., 0.] }
+        Matrix {
+            v: [sx, 0., 0., sy, 0., 0.],
+        }
     }
     /// Construct a matrix for scaling by the same factor, `s` in both
     /// directions.
@@ -120,7 +126,9 @@ impl Matrix {
     }
     /// Construct a matrix for skewing.
     pub fn skew(a: f32, b: f32) -> Self {
-        Matrix { v: [1., a.tan(), b.tan(), 1., 0., 0.] }
+        Matrix {
+            v: [1., a.tan(), b.tan(), 1., 0., 0.],
+        }
     }
 }
 
@@ -137,12 +145,14 @@ impl Mul for Matrix {
         let a = self.v;
         let b = b.v;
         Matrix {
-            v: [a[0] * b[0] + a[1] * b[2],
+            v: [
+                a[0] * b[0] + a[1] * b[2],
                 a[0] * b[1] + a[1] * b[3],
                 a[2] * b[0] + a[3] * b[2],
                 a[2] * b[1] + a[3] * b[3],
                 a[4] * b[0] + a[5] * b[2] + b[4],
-                a[4] * b[1] + a[5] * b[3] + b[5]],
+                a[4] * b[1] + a[5] * b[3] + b[5],
+            ],
         }
     }
 }

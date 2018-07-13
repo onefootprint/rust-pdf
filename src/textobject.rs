@@ -79,13 +79,13 @@ impl<'a> TextObject<'a> {
     pub fn set_stroke_color(&mut self, color: Color) -> io::Result<()> {
         let norm = |c| c as f32 / 255.0;
         match color {
-            Color::RGB { red, green, blue } => {
-                write!(self.output,
-                       "{} {} {} SC\n",
-                       norm(red),
-                       norm(green),
-                       norm(blue))
-            }
+            Color::RGB { red, green, blue } => write!(
+                self.output,
+                "{} {} {} SC\n",
+                norm(red),
+                norm(green),
+                norm(blue),
+            ),
             Color::Gray { gray } => write!(self.output, "{} G\n", norm(gray)),
         }
     }
@@ -93,13 +93,13 @@ impl<'a> TextObject<'a> {
     pub fn set_fill_color(&mut self, color: Color) -> io::Result<()> {
         let norm = |c| c as f32 / 255.0;
         match color {
-            Color::RGB { red, green, blue } => {
-                write!(self.output,
-                       "{} {} {} sc\n",
-                       norm(red),
-                       norm(green),
-                       norm(blue))
-            }
+            Color::RGB { red, green, blue } => write!(
+                self.output,
+                "{} {} {} sc\n",
+                norm(red),
+                norm(green),
+                norm(blue),
+            ),
             Color::Gray { gray } => write!(self.output, "{} g\n", norm(gray)),
         }
     }

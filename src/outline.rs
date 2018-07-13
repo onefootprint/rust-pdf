@@ -28,12 +28,13 @@ impl OutlineItem {
         self.page_id = Some(page_id)
     }
 
-    pub fn write_dictionary(&self,
-                            output: &mut Write,
-                            parent_id: usize,
-                            prev: Option<usize>,
-                            next: Option<usize>)
-                            -> io::Result<()> {
+    pub fn write_dictionary(
+        &self,
+        output: &mut Write,
+        parent_id: usize,
+        prev: Option<usize>,
+        next: Option<usize>,
+    ) -> io::Result<()> {
         try!(output.write_all(b"<< /Title ("));
         try!(output.write_all(&WIN_ANSI_ENCODING.encode_string(&self.title)));
         try!(output.write_all(b")\n"));
