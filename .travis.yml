@@ -2,18 +2,21 @@ language: rust
 cache: cargo
 before_script:
 - cargo update || true
-- cargo install rustfmt || true
 rust:
   - stable
   - beta
   - nightly
   - 1.14.0
   - 1.13.0
+  - 1.26.2
 matrix:
+  include:
+   - rust: nightly
+     env: TASK=rustfmt
+     before_script:
+      - rustup component add rustfmt-preview
+     script:
+      - cargo fmt -- --check
   allow_failures:
     - rust: nightly
-script:
-- |
-  PATH=${HOME}/.cargo/bin:$PATH cargo fmt -- --write-mode=diff &&
-  cargo build &&
-  cargo test
+      env:
