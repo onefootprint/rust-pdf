@@ -8,7 +8,9 @@ use std::path::Path;
 
 #[allow(dead_code)]
 mod encoding;
-use encoding::{Encoding, SYMBOL_ENCODING, WIN_ANSI_ENCODING};
+use encoding::{
+    Encoding, SYMBOL_ENCODING, WIN_ANSI_ENCODING, ZAPFDINGBATS_ENCODING,
+};
 
 fn write_cond(f: &mut File, name: &str, encoding: &Encoding) -> Result<()> {
     write!(
@@ -77,7 +79,6 @@ fn main() {
         write_cond(f, font, &WIN_ANSI_ENCODING).unwrap();
     }
     write_cond(f, "Symbol", &SYMBOL_ENCODING).unwrap();
-    // FIXME There is a special encoding for ZapfDingbats
-    write_cond(f, "ZapfDingbats", &WIN_ANSI_ENCODING).unwrap();
+    write_cond(f, "ZapfDingbats", &ZAPFDINGBATS_ENCODING).unwrap();
     writeln!(f, "}}").unwrap();
 }
