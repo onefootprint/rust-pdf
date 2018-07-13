@@ -101,7 +101,7 @@ impl FontSource for BuiltinFont {
     }
 
     /// The encoding is WinAnsiEncoding for all builtin fonts except
-    /// Symbol, for wich it is SymbolEncoding, and
+    /// Symbol, for which it is SymbolEncoding, and
     /// ZapfDingbats, which uses ZapfDingbatsEncoding.
     fn get_encoding(&self) -> Encoding {
         match *self {
