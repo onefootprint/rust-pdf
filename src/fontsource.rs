@@ -90,7 +90,7 @@ impl FontSource for BuiltinFont {
                 pdf.output,
                 "<< /Type /Font /Subtype /Type1 /BaseFont /{} /Encoding /{} >>",
                 self.pdf_name(),
-                "WinAnsiEncoding",
+                self.get_encoding().get_name()
             )?;
             Ok(font_object_id)
         })

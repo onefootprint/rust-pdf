@@ -83,6 +83,13 @@ fn main() {
                 14.0,
                 "∀ μ < δ : ∃ σ ∈ Σ",
             )?;
+            c.center_text(
+                150.0,
+                90.0,
+                BuiltinFont::ZapfDingbats,
+                14.0,
+                "♥♠♦♣",
+            )?;
             Ok(())
         })
         .unwrap();
