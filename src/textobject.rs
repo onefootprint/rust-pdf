@@ -20,15 +20,15 @@ use std::io::{self, Write};
 /// # document.render_page(180.0, 240.0, |canvas| {
 /// let serif = canvas.get_font(BuiltinFont::Times_Roman);
 /// // t will be a TextObject
-/// try!(canvas.text(|t| {
-///     try!(t.set_font(&serif, 14.0));
-///     try!(t.set_leading(18.0));
-///     try!(t.pos(10.0, 300.0));
-///     try!(t.show("Some lines of text in what might look like a"));
-///     try!(t.show_line("paragraph of three lines. Lorem ipsum dolor"));
-///     try!(t.show_line("sit amet. Blahonga."));
+/// canvas.text(|t| {
+///     t.set_font(&serif, 14.0)?;
+///     t.set_leading(18.0)?;
+///     t.pos(10.0, 300.0)?;
+///     t.show("Some lines of text in what might look like a")?;
+///     t.show_line("paragraph of three lines. Lorem ipsum dolor")?;
+///     t.show_line("sit amet. Blahonga.")?;
 ///     Ok(())
-/// }));
+/// })?;
 /// # Ok(())
 /// # }).unwrap();
 /// # document.finish().unwrap();
@@ -115,9 +115,9 @@ impl<'a> TextObject<'a> {
     }
     /// Show a text.
     pub fn show(&mut self, text: &str) -> io::Result<()> {
-        try!(self.output.write_all(b"("));
-        try!(self.output.write_all(&self.encoding.encode_string(text)));
-        try!(self.output.write_all(b") Tj\n"));
+        self.output.write_all(b"(")?;
+        self.output.write_all(&self.encoding.encode_string(text))?;
+        self.output.write_all(b") Tj\n")?;
         Ok(())
     }
 
@@ -137,26 +137,26 @@ impl<'a> TextObject<'a> {
     /// # document.render_page(180.0, 240.0, |canvas| {
     /// # let serif = canvas.get_font(BuiltinFont::Times_Roman);
     /// # canvas.text(|t| {
-    /// #    try!(t.set_font(&serif, 14.0));
+    /// #    t.set_font(&serif, 14.0)?;
     /// t.show_adjusted(&[("W", 130), ("AN", -40), ("D", 0)])
     /// # })
     /// # }).unwrap();
     /// # document.finish().unwrap();
     /// ```
     pub fn show_adjusted(&mut self, param: &[(&str, i32)]) -> io::Result<()> {
-        try!(self.output.write_all(b"["));
+        self.output.write_all(b"[")?;
         for &(text, offset) in param {
-            try!(self.output.write_all(b"("));
-            try!(self.output.write_all(&self.encoding.encode_string(text)));
-            try!(write!(self.output, ") {} ", offset))
+            self.output.write_all(b"(")?;
+            self.output.write_all(&self.encoding.encode_string(text))?;
+            write!(self.output, ") {} ", offset)?
         }
         write!(self.output, "] TJ\n")
     }
     /// Show a text as a line.  See also [set_leading](#method.set_leading).
     pub fn show_line(&mut self, text: &str) -> io::Result<()> {
-        try!(self.output.write_all(b"("));
-        try!(self.output.write_all(&self.encoding.encode_string(text)));
-        try!(self.output.write_all(b") '\n"));
+        self.output.write_all(b"(")?;
+        self.output.write_all(&self.encoding.encode_string(text))?;
+        self.output.write_all(b") '\n")?;
         Ok(())
     }
     /// Push the graphics state on a stack.

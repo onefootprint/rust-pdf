@@ -119,7 +119,7 @@ impl<'a> Canvas<'a> {
         x2: f32,
         y2: f32,
     ) -> io::Result<()> {
-        try!(self.move_to(x1, y1));
+        self.move_to(x1, y1)?;
         self.line_to(x2, y2)
     }
     /// Begin a new subpath at the point (x, y).
@@ -157,11 +157,11 @@ impl<'a> Canvas<'a> {
         let rightp = x + (r * c);
         let tp = y - (r * c);
         let bp = y + (r * c);
-        try!(self.move_to(x, t));
-        try!(self.curve_to(leftp, t, left, tp, left, y));
-        try!(self.curve_to(left, bp, leftp, b, x, b));
-        try!(self.curve_to(rightp, b, right, bp, right, y));
-        try!(self.curve_to(right, tp, rightp, t, x, t));
+        self.move_to(x, t)?;
+        self.curve_to(leftp, t, left, tp, left, y)?;
+        self.curve_to(left, bp, leftp, b, x, b)?;
+        self.curve_to(rightp, b, right, bp, right, y)?;
+        self.curve_to(right, tp, rightp, t, x, t)?;
         Ok(())
     }
     /// Stroke the current path.
@@ -203,9 +203,9 @@ impl<'a> Canvas<'a> {
         F: FnOnce(&mut TextObject) -> io::Result<T>,
     {
         use textobject::create_text_object;
-        try!(write!(self.output, "BT\n"));
-        let result = try!(render_text(&mut create_text_object(self.output)));
-        try!(write!(self.output, "ET\n"));
+        write!(self.output, "BT\n")?;
+        let result = render_text(&mut create_text_object(self.output))?;
+        write!(self.output, "ET\n")?;
         Ok(result)
     }
     /// Utility method for placing a string of text.
@@ -219,8 +219,8 @@ impl<'a> Canvas<'a> {
     ) -> io::Result<()> {
         let font = self.get_font(font);
         self.text(|t| {
-            try!(t.set_font(&font, size));
-            try!(t.pos(x, y));
+            t.set_font(&font, size)?;
+            t.pos(x, y)?;
             t.show(text)
         })
     }
@@ -236,8 +236,8 @@ impl<'a> Canvas<'a> {
         let font = self.get_font(font);
         self.text(|t| {
             let text_width = font.get_width(size, text);
-            try!(t.set_font(&font, size));
-            try!(t.pos(x - text_width, y));
+            t.set_font(&font, size)?;
+            t.pos(x - text_width, y)?;
             t.show(text)
         })
     }
@@ -253,8 +253,8 @@ impl<'a> Canvas<'a> {
         let font = self.get_font(font);
         self.text(|t| {
             let text_width = font.get_width(size, text);
-            try!(t.set_font(&font, size));
-            try!(t.pos(x - text_width / 2.0, y));
+            t.set_font(&font, size)?;
+            t.pos(x - text_width / 2.0, y)?;
             t.show(text)
         })
     }

@@ -11,34 +11,34 @@ mod encoding;
 use encoding::{Encoding, SYMBOL_ENCODING, WIN_ANSI_ENCODING};
 
 fn write_cond(f: &mut File, name: &str, encoding: &Encoding) -> Result<()> {
-    try!(write!(
+    write!(
         f,
         "  static ref METRICS_{name}: FontMetrics = \
          FontMetrics::from_slice(&[",
         name = name.to_uppercase()
-    ));
+    )?;
     let filename = format!("data/{}.afm", name.replace("_", "-"));
     println!("cargo:rerun-if-changed={}", filename);
-    let afm_file = try!(File::open(filename));
+    let afm_file = File::open(filename)?;
     for lineresult in BufReader::new(afm_file).lines() {
-        let line = try!(lineresult);
+        let line = lineresult?;
         let words: Vec<&str> = line.split_whitespace().collect();
         if words[0] == "C" && words[3] == "WX" && words[6] == "N" {
             if let (Some(c), Ok(w)) =
                 (encoding.get_code(words[7]), words[4].parse::<u16>())
             {
-                try!(write!(f, "({}, {}), ", c, w));
+                write!(f, "({}, {}), ", c, w)?;
             }
         }
     }
-    try!(writeln!(f, "]);"));
+    writeln!(f, "]);")?;
     Ok(())
 }
 
 fn main() {
     let dst =
         Path::new(&env::var("OUT_DIR").unwrap()).join("metrics_data.rs");
-    let mut f = &mut File::create(&dst).unwrap();
+    let f = &mut File::create(&dst).unwrap();
     let textfonts = [
         "Courier",
         "Courier_Bold",

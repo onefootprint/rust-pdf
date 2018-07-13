@@ -80,13 +80,13 @@ impl Color {
 /// # use pdf_canvas::graphicsstate::Matrix;
 /// # let mut document = Pdf::create("foo.pdf").unwrap();
 /// # document.render_page(180.0, 240.0, |canvas| {
-/// try!(canvas.concat(Matrix::translate(10.0, 24.0)));
+/// canvas.concat(Matrix::translate(10.0, 24.0))?;
 ///
 /// // Matrixes can be combined by multiplication:
-/// try!(canvas.concat(Matrix::translate(7.0, 0.0) * Matrix::rotate_deg(45.0)));
+/// canvas.concat(Matrix::translate(7.0, 0.0) * Matrix::rotate_deg(45.0))?;
 /// // ... will be visualy identical to:
-/// try!(canvas.concat(Matrix::translate(7.0, 0.0)));
-/// try!(canvas.concat(Matrix::rotate_deg(45.0)));
+/// canvas.concat(Matrix::translate(7.0, 0.0))?;
+/// canvas.concat(Matrix::rotate_deg(45.0))?;
 /// # Ok(())
 /// # }).unwrap();
 /// # document.finish().unwrap();

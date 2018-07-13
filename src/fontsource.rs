@@ -84,13 +84,13 @@ impl FontSource for BuiltinFont {
         // require a stream for the actual font, and probably another
         // object for metrics etc
         pdf.write_new_object(|font_object_id, pdf| {
-            try!(write!(
+            write!(
                 pdf.output,
                 "<< /Type /Font /Subtype /Type1 /BaseFont /{} \
                  /Encoding /{} >>\n",
                 self.pdf_name(),
                 self.get_encoding().get_name(),
-            ));
+            )?;
             Ok(font_object_id)
         })
     }

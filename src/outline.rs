@@ -35,18 +35,18 @@ impl OutlineItem {
         prev: Option<usize>,
         next: Option<usize>,
     ) -> io::Result<()> {
-        try!(output.write_all(b"<< /Title ("));
-        try!(output.write_all(&WIN_ANSI_ENCODING.encode_string(&self.title)));
-        try!(output.write_all(b")\n"));
-        try!(write!(output, "/Parent {} 0 R\n", parent_id));
+        output.write_all(b"<< /Title (")?;
+        output.write_all(&WIN_ANSI_ENCODING.encode_string(&self.title))?;
+        output.write_all(b")\n")?;
+        write!(output, "/Parent {} 0 R\n", parent_id)?;
         if let Some(id) = prev {
-            try!(write!(output, "/Prev {} 0 R\n", id));
+            write!(output, "/Prev {} 0 R\n", id)?;
         }
         if let Some(id) = next {
-            try!(write!(output, "/Next {} 0 R\n", id));
+            write!(output, "/Next {} 0 R\n", id)?;
         }
         if let Some(id) = self.page_id {
-            try!(write!(output, "/Dest [{} 0 R /XYZ null null null]\n", id));
+            write!(output, "/Dest [{} 0 R /XYZ null null null]\n", id)?;
         }
         write!(output, ">>\n")
     }
