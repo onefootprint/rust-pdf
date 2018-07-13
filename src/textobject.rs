@@ -41,7 +41,7 @@ pub struct TextObject<'a> {
 // Should not be called by user code.
 pub fn create_text_object<'a>(output: &'a mut Write) -> TextObject<'a> {
     TextObject {
-        output: output,
+        output,
         encoding: WIN_ANSI_ENCODING.clone(),
     }
 }
@@ -51,56 +51,56 @@ impl<'a> TextObject<'a> {
     /// operations.
     pub fn set_font(&mut self, font: &FontRef, size: f32) -> io::Result<()> {
         self.encoding = font.get_encoding();
-        write!(self.output, "{} {} Tf\n", font, size)
+        writeln!(self.output, "{} {} Tf", font, size)
     }
     /// Set leading, the vertical distance from a line of text to the next.
     /// This is important for the [show_line](#method.show_line) method.
     pub fn set_leading(&mut self, leading: f32) -> io::Result<()> {
-        write!(self.output, "{} TL\n", leading)
+        writeln!(self.output, "{} TL", leading)
     }
     /// Set the rise above the baseline for coming text.  Calling
     /// set_rise again with a zero argument will get back to the old
     /// baseline.
     pub fn set_rise(&mut self, rise: f32) -> io::Result<()> {
-        write!(self.output, "{} Ts\n", rise)
+        writeln!(self.output, "{} Ts", rise)
     }
     /// Set the amount of extra space between characters, in 1/1000
     /// text unit.
     pub fn set_char_spacing(&mut self, a_c: f32) -> io::Result<()> {
-        write!(self.output, "{} Tc\n", a_c)
+        writeln!(self.output, "{} Tc", a_c)
     }
     /// Set the amount of extra space between words, in 1/1000
     /// text unit.
     pub fn set_word_spacing(&mut self, a_w: f32) -> io::Result<()> {
-        write!(self.output, "{} Tw\n", a_w)
+        writeln!(self.output, "{} Tw", a_w)
     }
 
     /// Set color for stroking operations.
     pub fn set_stroke_color(&mut self, color: Color) -> io::Result<()> {
-        let norm = |c| c as f32 / 255.0;
+        let norm = |c| f32::from(c) / 255.0;
         match color {
-            Color::RGB { red, green, blue } => write!(
+            Color::RGB { red, green, blue } => writeln!(
                 self.output,
-                "{} {} {} SC\n",
+                "{} {} {} SC",
                 norm(red),
                 norm(green),
                 norm(blue),
             ),
-            Color::Gray { gray } => write!(self.output, "{} G\n", norm(gray)),
+            Color::Gray { gray } => writeln!(self.output, "{} G", norm(gray)),
         }
     }
     /// Set color for non-stroking operations.
     pub fn set_fill_color(&mut self, color: Color) -> io::Result<()> {
-        let norm = |c| c as f32 / 255.0;
+        let norm = |c| f32::from(c) / 255.0;
         match color {
-            Color::RGB { red, green, blue } => write!(
+            Color::RGB { red, green, blue } => writeln!(
                 self.output,
-                "{} {} {} sc\n",
+                "{} {} {} sc",
                 norm(red),
                 norm(green),
                 norm(blue),
             ),
-            Color::Gray { gray } => write!(self.output, "{} g\n", norm(gray)),
+            Color::Gray { gray } => writeln!(self.output, "{} g", norm(gray)),
         }
     }
 
@@ -111,7 +111,7 @@ impl<'a> TextObject<'a> {
     /// [Canvas::move_to](struct.Canvas.html#method.move_to), after that,
     /// the point is relative to the earlier pos.
     pub fn pos(&mut self, x: f32, y: f32) -> io::Result<()> {
-        write!(self.output, "{} {} Td\n", x, y)
+        writeln!(self.output, "{} {} Td", x, y)
     }
     /// Show a text.
     pub fn show(&mut self, text: &str) -> io::Result<()> {
@@ -162,12 +162,12 @@ impl<'a> TextObject<'a> {
     /// Push the graphics state on a stack.
     pub fn gsave(&mut self) -> io::Result<()> {
         // TODO Push current encoding in self?
-        write!(self.output, "q\n")
+        writeln!(self.output, "q")
     }
     /// Pop a graphics state from the [gsave](#method.gsave) stack and
     /// restore it.
     pub fn grestore(&mut self) -> io::Result<()> {
         // TODO Pop current encoding in self?
-        write!(self.output, "Q\n")
+        writeln!(self.output, "Q")
     }
 }

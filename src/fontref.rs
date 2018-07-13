@@ -31,9 +31,9 @@ pub fn create_font_ref(
     metrics: Arc<FontMetrics>,
 ) -> FontRef {
     FontRef {
-        n: n,
-        encoding: encoding,
-        metrics: metrics,
+        n,
+        encoding,
+        metrics,
     }
 }
 
@@ -55,7 +55,7 @@ impl FontRef {
     pub fn get_width_raw(&self, text: &str) -> u32 {
         let mut result = 0;
         for char in self.encoding.encode_string(text) {
-            result += self.metrics.get_width(char).unwrap_or(100) as u32;
+            result += u32::from(self.metrics.get_width(char).unwrap_or(100));
         }
         result
     }
