@@ -84,10 +84,9 @@ impl FontSource for BuiltinFont {
         // require a stream for the actual font, and probably another
         // object for metrics etc
         pdf.write_new_object(|font_object_id, pdf| {
-            write!(
+            writeln!(
                 pdf.output,
-                "<< /Type /Font /Subtype /Type1 /BaseFont /{} \
-                 /Encoding /{} >>\n",
+                "<< /Type /Font /Subtype /Type1 /BaseFont /{} /Encoding /{} >>",
                 self.pdf_name(),
                 self.get_encoding().get_name(),
             )?;
@@ -103,8 +102,8 @@ impl FontSource for BuiltinFont {
     /// Symbol, for wich it is SymbolEncoding.
     /// TODO: ZapfDingbats should also have a special encoding.
     fn get_encoding(&self) -> Encoding {
-        match self {
-            &BuiltinFont::Symbol => SYMBOL_ENCODING.clone(),
+        match *self {
+            BuiltinFont::Symbol => SYMBOL_ENCODING.clone(),
             // &BuiltinFont::ZapfDingbats => ZAPFDINGBATS_ENCODING.clone(),
             _ => WIN_ANSI_ENCODING.clone(),
         }
@@ -119,7 +118,7 @@ impl FontSource for BuiltinFont {
         self.get_encoding()
             .encode_string(text)
             .iter()
-            .map(|&ch| metrics.get_width(ch).unwrap_or(100) as u32)
+            .map(|&ch| u32::from(metrics.get_width(ch).unwrap_or(100)))
             .fold(0, Add::add)
     }
 

@@ -38,16 +38,16 @@ impl OutlineItem {
         output.write_all(b"<< /Title (")?;
         output.write_all(&WIN_ANSI_ENCODING.encode_string(&self.title))?;
         output.write_all(b")\n")?;
-        write!(output, "/Parent {} 0 R\n", parent_id)?;
+        writeln!(output, "/Parent {} 0 R", parent_id)?;
         if let Some(id) = prev {
-            write!(output, "/Prev {} 0 R\n", id)?;
+            writeln!(output, "/Prev {} 0 R", id)?;
         }
         if let Some(id) = next {
-            write!(output, "/Next {} 0 R\n", id)?;
+            writeln!(output, "/Next {} 0 R", id)?;
         }
         if let Some(id) = self.page_id {
-            write!(output, "/Dest [{} 0 R /XYZ null null null]\n", id)?;
+            writeln!(output, "/Dest [{} 0 R /XYZ null null null]", id)?;
         }
-        write!(output, ">>\n")
+        writeln!(output, ">>")
     }
 }

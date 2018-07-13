@@ -112,7 +112,7 @@ impl Pdf {
         // TODO Maybe use a lower version?  Possibly decide by features used?
         output.write_all(b"%PDF-1.7\n%\xB5\xED\xAE\xFB\n")?;
         Ok(Pdf {
-            output: output,
+            output,
             // Object ID 0 is special in PDF.
             // We reserve IDs 1 and 2 for the catalog and page tree.
             object_offsets: vec![-1, -1, -1],
@@ -179,15 +179,15 @@ impl Pdf {
             .write_new_object(move |contents_object_id, pdf| {
                 use canvas::create_canvas;
                 // Guess the ID of the next object. (We’ll assert it below.)
-                write!(
+                writeln!(
                     pdf.output,
                     "<< /Length {} 0 R >>\n\
-                     stream\n",
+                     stream",
                     contents_object_id + 1,
                 )?;
 
                 let start = pdf.tell()?;
-                write!(pdf.output, "/DeviceRGB cs /DeviceRGB CS\n")?;
+                writeln!(pdf.output, "/DeviceRGB cs /DeviceRGB CS")?;
                 let mut fonts = HashMap::new();
                 let mut outline_items: Vec<OutlineItem> = Vec::new();
                 render_contents(&mut create_canvas(
@@ -197,12 +197,12 @@ impl Pdf {
                 ))?;
                 let end = pdf.tell()?;
 
-                write!(pdf.output, "endstream\n")?;
+                writeln!(pdf.output, "endstream")?;
                 Ok((contents_object_id, end - start, fonts, outline_items))
             })?;
         self.write_new_object(|length_object_id, pdf| {
             assert!(length_object_id == contents_object_id + 1);
-            write!(pdf.output, "{}\n", content_length)
+            writeln!(pdf.output, "{}", content_length)
         })?;
 
         let mut font_oids = NamedRefs::new();
@@ -240,14 +240,14 @@ impl Pdf {
         font_oids: NamedRefs,
     ) -> io::Result<usize> {
         self.write_new_object(|page_oid, pdf| {
-            write!(
+            writeln!(
                 pdf.output,
                 "<< /Type /Page\n   \
                  /Parent {parent} 0 R\n   \
                  /Resources << /Font << {fonts}>> >>\n   \
                  /MediaBox [ 0 0 {width} {height} ]\n   \
                  /Contents {c_oid} 0 R\n\
-                 >>\n",
+                 >>",
                 parent = PAGES_OBJECT_ID,
                 fonts = font_oids,
                 width = width,
@@ -292,9 +292,9 @@ impl Pdf {
     {
         // `as i64` here would overflow for PDF files bigger than 2**63 bytes
         let offset = self.tell()? as i64;
-        write!(self.output, "{} 0 obj\n", id)?;
+        writeln!(self.output, "{} 0 obj", id)?;
         let result = write_content(self)?;
-        write!(self.output, "endobj\n")?;
+        writeln!(self.output, "endobj")?;
         Ok((result, offset))
     }
 
@@ -303,12 +303,12 @@ impl Pdf {
     /// the xref list, the trailer object and the startxref position.
     pub fn finish(mut self) -> io::Result<()> {
         self.write_object_with_id(PAGES_OBJECT_ID, |pdf| {
-            write!(
+            writeln!(
                 pdf.output,
                 "<< /Type /Pages\n   \
                  /Count {c}\n   \
                  /Kids [ {pages}]\n\
-                 >>\n",
+                 >>",
                 c = pdf.page_objects_ids.len(),
                 pages = pdf
                     .page_objects_ids
@@ -322,7 +322,7 @@ impl Pdf {
             self.write_new_object(|page_object_id, pdf| {
                 write!(pdf.output, "<<")?;
                 for (key, value) in info {
-                    write!(pdf.output, " /{} ({})\n", key, value)?;
+                    writeln!(pdf.output, " /{} ({})", key, value)?;
                 }
                 if let Ok(now) =
                     time::strftime("%Y%m%d%H%M%S%z", &time::now())
@@ -334,7 +334,7 @@ impl Pdf {
                         now = now,
                     )?;
                 }
-                write!(pdf.output, ">>\n")?;
+                writeln!(pdf.output, ">>")?;
                 Ok(Some(page_object_id))
             })?
         } else {
@@ -344,49 +344,49 @@ impl Pdf {
         let outlines_id = self.write_outlines()?;
 
         self.write_object_with_id(ROOT_OBJECT_ID, |pdf| {
-            write!(
+            writeln!(
                 pdf.output,
                 "<< /Type /Catalog\n   \
-                 /Pages {} 0 R\n",
+                 /Pages {} 0 R",
                 PAGES_OBJECT_ID,
             )?;
             if let Some(outlines_id) = outlines_id {
-                write!(pdf.output, "/Outlines {} 0 R\n", outlines_id)?;
+                writeln!(pdf.output, "/Outlines {} 0 R", outlines_id)?;
             }
-            write!(pdf.output, ">>\n")?;
+            writeln!(pdf.output, ">>")?;
             Ok(())
         })?;
         let startxref = self.tell()?;
-        write!(
+        writeln!(
             self.output,
             "xref\n\
              0 {}\n\
-             0000000000 65535 f \n",
+             0000000000 65535 f ",
             self.object_offsets.len(),
         )?;
         // Object 0 (above) is special
         // Use [1..] to skip object 0 in self.object_offsets.
         for &offset in &self.object_offsets[1..] {
             assert!(offset >= 0);
-            write!(self.output, "{:010} 00000 n \n", offset)?;
+            writeln!(self.output, "{:010} 00000 n ", offset)?;
         }
-        write!(
+        writeln!(
             self.output,
             "trailer\n\
              << /Size {size}\n   \
-             /Root {root} 0 R\n",
+             /Root {root} 0 R",
             size = self.object_offsets.len(),
             root = ROOT_OBJECT_ID,
         )?;
         if let Some(id) = document_info_id {
-            write!(self.output, "   /Info {} 0 R\n", id)?;
+            writeln!(self.output, "   /Info {} 0 R", id)?;
         }
-        write!(
+        writeln!(
             self.output,
             ">>\n\
              startxref\n\
              {}\n\
-             %%EOF\n",
+             %%EOF",
             startxref,
         )?;
         Ok(())
@@ -421,13 +421,13 @@ impl Pdf {
             }
         }
         self.write_object_with_id(parent_id, |pdf| {
-            write!(
+            writeln!(
                 pdf.output,
                 "<< /Type /Outlines\n   \
                  /First {first} 0 R\n   \
                  /Last {last} 0 R\n   \
                  /Count {count}\n\
-                 >>\n",
+                 >>",
                 last = last_id,
                 first = first_id,
                 count = count,
@@ -454,7 +454,7 @@ impl NamedRefs {
 
 impl fmt::Display for NamedRefs {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        for (name, id) in self.oids.iter() {
+        for (name, id) in &self.oids {
             write!(f, "{} {} 0 R ", name, id)?;
         }
         Ok(())

@@ -27,9 +27,9 @@ pub fn create_canvas<'a>(
     outline_items: &'a mut Vec<OutlineItem>,
 ) -> Canvas<'a> {
     Canvas {
-        output: output,
-        fonts: fonts,
-        outline_items: outline_items,
+        output,
+        fonts,
+        outline_items,
     }
 }
 
@@ -43,16 +43,16 @@ impl<'a> Canvas<'a> {
         width: f32,
         height: f32,
     ) -> io::Result<()> {
-        write!(self.output, "{} {} {} {} re\n", x, y, width, height)
+        writeln!(self.output, "{} {} {} {} re", x, y, width, height)
     }
     /// Set the line join style in the graphics state.
     pub fn set_line_join_style(
         &mut self,
         style: JoinStyle,
     ) -> io::Result<()> {
-        write!(
+        writeln!(
             self.output,
-            "{} j\n",
+            "{} j",
             match style {
                 JoinStyle::Miter => 0,
                 JoinStyle::Round => 1,
@@ -62,9 +62,9 @@ impl<'a> Canvas<'a> {
     }
     /// Set the line join style in the graphics state.
     pub fn set_line_cap_style(&mut self, style: CapStyle) -> io::Result<()> {
-        write!(
+        writeln!(
             self.output,
-            "{} J\n",
+            "{} J",
             match style {
                 CapStyle::Butt => 0,
                 CapStyle::Round => 1,
@@ -74,41 +74,41 @@ impl<'a> Canvas<'a> {
     }
     /// Set the line width in the graphics state.
     pub fn set_line_width(&mut self, w: f32) -> io::Result<()> {
-        write!(self.output, "{} w\n", w)
+        writeln!(self.output, "{} w", w)
     }
     /// Set color for stroking operations.
     pub fn set_stroke_color(&mut self, color: Color) -> io::Result<()> {
-        let norm = |c| c as f32 / 255.0;
+        let norm = |c| f32::from(c) / 255.0;
         match color {
-            Color::RGB { red, green, blue } => write!(
+            Color::RGB { red, green, blue } => writeln!(
                 self.output,
-                "{} {} {} SC\n",
+                "{} {} {} SC",
                 norm(red),
                 norm(green),
                 norm(blue),
             ),
-            Color::Gray { gray } => write!(self.output, "{} G\n", norm(gray)),
+            Color::Gray { gray } => writeln!(self.output, "{} G", norm(gray)),
         }
     }
     /// Set color for non-stroking operations.
     pub fn set_fill_color(&mut self, color: Color) -> io::Result<()> {
-        let norm = |c| c as f32 / 255.0;
+        let norm = |c| f32::from(c) / 255.0;
         match color {
-            Color::RGB { red, green, blue } => write!(
+            Color::RGB { red, green, blue } => writeln!(
                 self.output,
-                "{} {} {} sc\n",
+                "{} {} {} sc",
                 norm(red),
                 norm(green),
                 norm(blue),
             ),
-            Color::Gray { gray } => write!(self.output, "{} g\n", norm(gray)),
+            Color::Gray { gray } => writeln!(self.output, "{} g", norm(gray)),
         }
     }
 
     /// Modify the current transformation matrix for coordinates by
     /// concatenating the specified matrix.
     pub fn concat(&mut self, m: Matrix) -> io::Result<()> {
-        write!(self.output, "{} cm\n", m)
+        writeln!(self.output, "{} cm", m)
     }
 
     /// Append a straight line from (x1, y1) to (x2, y2) to the current path.
@@ -142,7 +142,7 @@ impl<'a> Canvas<'a> {
         x3: f32,
         y3: f32,
     ) -> io::Result<()> {
-        write!(self.output, "{} {} {} {} {} {} c\n", x1, y1, x2, y2, x3, y3)
+        writeln!(self.output, "{} {} {} {} {} {} c", x1, y1, x2, y2, x3, y3)
     }
     /// Add a circle approximated by four cubic Bézier curves to the
     /// current path.  Based on
@@ -152,7 +152,7 @@ impl<'a> Canvas<'a> {
         let b = y + r;
         let left = x - r;
         let right = x + r;
-        let c = 0.551915024494;
+        let c = 0.551_915_024_494;
         let leftp = x - (r * c);
         let rightp = x + (r * c);
         let tp = y - (r * c);
@@ -166,15 +166,15 @@ impl<'a> Canvas<'a> {
     }
     /// Stroke the current path.
     pub fn stroke(&mut self) -> io::Result<()> {
-        write!(self.output, "S\n")
+        writeln!(self.output, "S")
     }
     /// Close and stroke the current path.
     pub fn close_and_stroke(&mut self) -> io::Result<()> {
-        write!(self.output, "s\n")
+        writeln!(self.output, "s")
     }
     /// Fill the current path.
     pub fn fill(&mut self) -> io::Result<()> {
-        write!(self.output, "f\n")
+        writeln!(self.output, "f")
     }
     /// Get a FontRef for a specific font.
     pub fn get_font(&mut self, font: BuiltinFont) -> FontRef {
@@ -203,9 +203,9 @@ impl<'a> Canvas<'a> {
         F: FnOnce(&mut TextObject) -> io::Result<T>,
     {
         use textobject::create_text_object;
-        write!(self.output, "BT\n")?;
+        writeln!(self.output, "BT")?;
         let result = render_text(&mut create_text_object(self.output))?;
-        write!(self.output, "ET\n")?;
+        writeln!(self.output, "ET")?;
         Ok(result)
     }
     /// Utility method for placing a string of text.
@@ -273,11 +273,11 @@ impl<'a> Canvas<'a> {
     /// Save the current graphics state.
     /// The caller is responsible for restoring it later.
     pub fn gsave(&mut self) -> io::Result<()> {
-        write!(self.output, "q\n")
+        writeln!(self.output, "q")
     }
     /// Restor the current graphics state.
     /// The caller is responsible for having saved it earlier.
     pub fn grestore(&mut self) -> io::Result<()> {
-        write!(self.output, "Q\n")
+        writeln!(self.output, "Q")
     }
 }

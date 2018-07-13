@@ -69,20 +69,19 @@ impl Encoding {
         for ch in text.chars() {
             match ch {
                 '\\' => {
-                    result.push('\\' as u8);
-                    result.push('\\' as u8)
+                    result.push(b'\\');
+                    result.push(b'\\')
                 }
                 '(' => {
-                    result.push('\\' as u8);
-                    result.push('(' as u8)
+                    result.push(b'\\');
+                    result.push(b'(')
                 }
                 ')' => {
-                    result.push('\\' as u8);
-                    result.push(')' as u8)
+                    result.push(b'\\');
+                    result.push(b')')
                 }
-                ch => result.push(
-                    *self.unicode_to_code.get(&ch).unwrap_or(&('?' as u8)),
-                ),
+                ch => result
+                    .push(*self.unicode_to_code.get(&ch).unwrap_or(&(b'?'))),
             }
         }
         result

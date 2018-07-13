@@ -6,6 +6,7 @@ use std::ops::Mul;
 
 /// Line join styles, as described in section 8.4.3.4 of the PDF
 /// specification.
+#[derive(Clone, Copy, Debug)]
 pub enum JoinStyle {
     /// The outer edges continues until they meet.
     Miter,
@@ -18,6 +19,7 @@ pub enum JoinStyle {
 
 /// Line cap styles, as described in section 8.4.3.4 of the PDF
 /// specification.
+#[derive(Clone, Copy, Debug)]
 pub enum CapStyle {
     /// Truncate the line squarely through the endpoint.
     Butt,
@@ -48,11 +50,7 @@ impl Color {
     /// let yellow = Color::rgb(255, 255, 0);
     /// ````
     pub fn rgb(red: u8, green: u8, blue: u8) -> Self {
-        Color::RGB {
-            red: red,
-            green: green,
-            blue: blue,
-        }
+        Color::RGB { red, green, blue }
     }
 
     /// Return a grayscale color value.
@@ -64,7 +62,7 @@ impl Color {
     /// let gray  = Color::gray(128);
     /// ````
     pub fn gray(gray: u8) -> Self {
-        Color::Gray { gray: gray }
+        Color::Gray { gray }
     }
 }
 
