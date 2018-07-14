@@ -54,8 +54,13 @@ impl FontRef {
     /// and in some methods on a [TextObject](struct.TextObject.html).
     pub fn get_width_raw(&self, text: &str) -> u32 {
         let mut result = 0;
-        for char in self.encoding.encode_string(text) {
-            result += u32::from(self.metrics.get_width(char).unwrap_or(100));
+        for char in text.chars() {
+            result += u32::from(
+                self.encoding
+                    .encode_char(char)
+                    .and_then(|ch| self.metrics.get_width(ch))
+                    .unwrap_or(100),
+            );
         }
         result
     }

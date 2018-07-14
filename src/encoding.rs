@@ -28,6 +28,7 @@ impl Encoding {
     pub fn get_name(&self) -> String {
         self.name.clone()
     }
+
     /// Get the encoded code point from a type1 character name.
     /// Character names are case sensitive and contains only ascii letters.
     /// If the name is not available in the encoding, or is not a proper
@@ -51,6 +52,25 @@ impl Encoding {
         }
     }
 
+    /// Get the encoded code point from a (unicode) character.
+    /// If the character is not available in the encoding, None is returned.
+    ///
+    /// # Example
+    /// ````
+    /// use pdf_canvas::{BuiltinFont, FontSource};
+    /// let enc = BuiltinFont::Helvetica.get_encoding();
+    /// assert_eq!(Some(b' '),  enc.encode_char(' '));
+    /// assert_eq!(Some(b'A'),  enc.encode_char('A'));
+    /// assert_eq!(Some(b'\\'),  enc.encode_char('\\'));
+    /// assert_eq!(Some(229), enc.encode_char('å'));
+    /// assert_eq!(None,      enc.encode_char('Ł'));
+    /// assert_eq!(None,      enc.encode_char(char::from(0)));
+    /// assert_eq!(None,      enc.encode_char('☺'));
+    /// ````
+    pub fn encode_char(&self, ch: char) -> Option<u8> {
+        self.unicode_to_code.get(&ch).cloned()
+    }
+
     /// Convert a rust string to a vector of bytes in the encoding.
     /// # Example
     /// ````
@@ -70,21 +90,21 @@ impl Encoding {
     pub fn encode_string(&self, text: &str) -> Vec<u8> {
         let mut result = Vec::new();
         for ch in text.chars() {
-            match ch {
-                '\\' => {
+            match self.encode_char(ch) {
+                Some(b'\\') => {
                     result.push(b'\\');
                     result.push(b'\\')
                 }
-                '(' => {
+                Some(b'(') => {
                     result.push(b'\\');
                     result.push(b'(')
                 }
-                ')' => {
+                Some(b')') => {
                     result.push(b'\\');
                     result.push(b')')
                 }
-                ch => result
-                    .push(*self.unicode_to_code.get(&ch).unwrap_or(&(b'?'))),
+                Some(ch) => result.push(ch),
+                None => result.push(b'?'),
             }
         }
         result
