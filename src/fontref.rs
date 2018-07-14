@@ -24,7 +24,7 @@ pub struct FontRef {
     metrics: Arc<FontMetrics>,
 }
 
-// Should not be called by user code.
+// Hidden from user code by not beeing a constructor method of FontRef.
 pub fn create_font_ref(
     n: usize,
     encoding: Encoding,
