@@ -8,7 +8,6 @@ rust:
   - nightly
   - 1.26.2
   - 1.24.1
-  - 1.20.0
 matrix:
   include:
    - rust: nightly
