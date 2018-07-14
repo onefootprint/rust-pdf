@@ -51,7 +51,7 @@ pub trait FontSource: PartialEq + Eq + Hash {
     fn pdf_name(&self) -> String;
 
     /// Get the encoding that this font uses.
-    fn get_encoding(&self) -> Encoding;
+    fn get_encoding(&self) -> &Encoding;
 
     /// Get the width of a string in this font at given size.
     ///
@@ -103,11 +103,11 @@ impl FontSource for BuiltinFont {
     /// The encoding is WinAnsiEncoding for all builtin fonts except
     /// Symbol, for which it is SymbolEncoding, and
     /// ZapfDingbats, which uses ZapfDingbatsEncoding.
-    fn get_encoding(&self) -> Encoding {
+    fn get_encoding(&self) -> &Encoding {
         match *self {
-            BuiltinFont::Symbol => SYMBOL_ENCODING.clone(),
-            BuiltinFont::ZapfDingbats => ZAPFDINGBATS_ENCODING.clone(),
-            _ => WIN_ANSI_ENCODING.clone(),
+            BuiltinFont::Symbol => &SYMBOL_ENCODING,
+            BuiltinFont::ZapfDingbats => &ZAPFDINGBATS_ENCODING,
+            _ => &WIN_ANSI_ENCODING,
         }
     }
 

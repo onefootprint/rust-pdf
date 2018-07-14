@@ -187,7 +187,7 @@ impl<'a> Canvas<'a> {
             .or_insert_with(|| {
                 create_font_ref(
                     next_n,
-                    font.get_encoding(),
+                    font.get_encoding().clone(),
                     Arc::new(font.get_metrics()),
                 )
             })

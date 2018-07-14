@@ -39,8 +39,8 @@ pub fn create_font_ref(
 
 impl FontRef {
     /// Get the encoding used by the referenced font.
-    pub fn get_encoding(&self) -> Encoding {
-        self.encoding.clone()
+    pub fn get_encoding(&self) -> &Encoding {
+        &self.encoding
     }
 
     /// Get the width of the given text in this font at given size.

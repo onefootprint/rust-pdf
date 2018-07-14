@@ -50,7 +50,7 @@ impl<'a> TextObject<'a> {
     /// Set the font and font-size to be used by the following text
     /// operations.
     pub fn set_font(&mut self, font: &FontRef, size: f32) -> io::Result<()> {
-        self.encoding = font.get_encoding();
+        self.encoding = font.get_encoding().clone();
         writeln!(self.output, "{} {} Tf", font, size)
     }
     /// Set leading, the vertical distance from a line of text to the next.
