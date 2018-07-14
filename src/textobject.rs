@@ -150,7 +150,7 @@ impl<'a> TextObject<'a> {
             self.output.write_all(&self.encoding.encode_string(text))?;
             write!(self.output, ") {} ", offset)?
         }
-        write!(self.output, "] TJ\n")
+        writeln!(self.output, "] TJ")
     }
     /// Show a text as a line.  See also [set_leading](#method.set_leading).
     pub fn show_line(&mut self, text: &str) -> io::Result<()> {

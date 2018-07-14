@@ -131,7 +131,7 @@ impl<'a> Canvas<'a> {
     pub fn line_to(&mut self, x: f32, y: f32) -> io::Result<()> {
         write!(self.output, "{} {} l ", x, y)
     }
-    /// Add an Bézier curve from the current point to (x3, y3) with
+    /// Add a Bézier curve from the current point to (x3, y3) with
     /// (x1, y1) and (x2, y2) as Bézier controll points.
     pub fn curve_to(
         &mut self,
@@ -148,20 +148,22 @@ impl<'a> Canvas<'a> {
     /// current path.  Based on
     /// http://spencermortensen.com/articles/bezier-circle/
     pub fn circle(&mut self, x: f32, y: f32, r: f32) -> io::Result<()> {
-        let t = y - r;
-        let b = y + r;
+        let top = y - r;
+        let bottom = y + r;
         let left = x - r;
         let right = x + r;
+        #[cfg_attr(feature = "cargo-clippy", allow(excessive_precision))]
         let c = 0.551_915_024_494;
-        let leftp = x - (r * c);
-        let rightp = x + (r * c);
-        let tp = y - (r * c);
-        let bp = y + (r * c);
-        self.move_to(x, t)?;
-        self.curve_to(leftp, t, left, tp, left, y)?;
-        self.curve_to(left, bp, leftp, b, x, b)?;
-        self.curve_to(rightp, b, right, bp, right, y)?;
-        self.curve_to(right, tp, rightp, t, x, t)?;
+        let dist = r * c;
+        let up = y - dist;
+        let down = y + dist;
+        let leftp = x - dist;
+        let rightp = x + dist;
+        self.move_to(x, top)?;
+        self.curve_to(leftp, top, left, up, left, y)?;
+        self.curve_to(left, down, leftp, bottom, x, bottom)?;
+        self.curve_to(rightp, bottom, right, down, right, y)?;
+        self.curve_to(right, up, rightp, top, x, top)?;
         Ok(())
     }
     /// Stroke the current path.

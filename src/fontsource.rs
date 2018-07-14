@@ -125,6 +125,6 @@ impl FontSource for BuiltinFont {
     }
 
     fn get_metrics(&self) -> FontMetrics {
-        get_builtin_metrics(&self).clone()
+        get_builtin_metrics(*self).clone()
     }
 }

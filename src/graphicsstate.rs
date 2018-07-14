@@ -31,6 +31,7 @@ pub enum CapStyle {
 }
 
 /// Any color (or grayscale) value that this library can make PDF represent.
+#[derive(Clone, Copy, Debug)]
 pub enum Color {
     #[doc(hidden)]
     RGB { red: u8, green: u8, blue: u8 },

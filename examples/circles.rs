@@ -37,12 +37,12 @@ fn main() {
             c.set_stroke_color(Color::rgb(255, 230, 150))?;
             c.set_line_width(1.0)?;
             c.move_to(x + r, y)?;
-            let sides = 200;
+            let sides: u8 = 200;
             for n in 1..sides {
-                let phi = (2 * n) as f32 * PI / sides as f32;
+                let phi = f32::from(n) * 2.0 * PI / f32::from(sides);
                 c.line_to(x + r * phi.cos(), y + r * phi.sin())?;
             }
-            c.stroke()
+            c.close_and_stroke()
         })
         .unwrap();
     document.finish().unwrap();
