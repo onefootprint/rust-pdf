@@ -39,7 +39,7 @@ pub struct TextObject<'a> {
 }
 
 // Should not be called by user code.
-pub fn create_text_object<'a>(output: &'a mut Write) -> TextObject<'a> {
+pub fn create_text_object(output: &mut Write) -> TextObject {
     TextObject {
         output,
         encoding: WIN_ANSI_ENCODING.clone(),
