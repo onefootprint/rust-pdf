@@ -7,7 +7,7 @@ use std::io::{self, Write};
 use std::sync::Arc;
 use textobject::TextObject;
 
-/// An visual area where content can be drawn (a page).
+/// A visual area where content can be drawn (a page).
 ///
 /// Provides methods for defining and stroking or filling paths, as
 /// well as placing text objects.

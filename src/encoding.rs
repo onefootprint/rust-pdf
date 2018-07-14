@@ -4,8 +4,9 @@ use std::collections::BTreeMap;
 /// An encoding maintains the connection between unicode code points,
 /// bytes in PDF strings, and glyph names.
 ///
-/// Currently, only WIN_ANSI_ENCODING and SYMBOL_ENCODING are supported,
-/// and they are provided as built-in.
+/// Currently, only WIN_ANSI_ENCODING, SYMBOL_ENCODING, and
+/// ZAPFDINGBATS_ENCODING are supported, and they are provided as
+/// built-in.
 ///
 /// # Example
 /// ````
@@ -56,12 +57,14 @@ impl Encoding {
     /// use pdf_canvas::{BuiltinFont, FontSource};
     /// let enc = BuiltinFont::Helvetica.get_encoding();
     /// let symb_enc = BuiltinFont::Symbol.get_encoding();
-    /// assert_eq!(vec!(65, 66, 67), enc.encode_string("ABC"));
-    /// assert_eq!(vec!(82, 228, 107, 115, 109, 246, 114, 103, 229, 115),
+    /// assert_eq!(vec![b'A', b'B', b'C'], enc.encode_string("ABC"));
+    /// assert_eq!(vec![b'R', 228, b'k',
+    ///                 b's', b'm', 246, b'r', b'g', 229, b's'],
     ///            enc.encode_string("Räksmörgås"));
-    /// assert_eq!(vec!(67, 111, 102, 102, 101, 101, 32, 128, 49, 46, 50, 48),
+    /// assert_eq!(vec![b'C', b'o', b'f', b'f', b'e', b'e', b' ',
+    ///                 128, b'1', b'.', b'2', b'0'],
     ///            enc.encode_string("Coffee €1.20"));
-    /// assert_eq!(vec!(97, 32, 206, 32, 194),
+    /// assert_eq!(vec![b'a', b' ', 206, b' ', 194],
     ///            symb_enc.encode_string("α ∈ ℜ"));
     /// ````
     pub fn encode_string(&self, text: &str) -> Vec<u8> {
