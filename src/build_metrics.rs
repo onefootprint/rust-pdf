@@ -60,21 +60,24 @@ fn main() {
         "pub fn get_builtin_metrics(font: BuiltinFont) \
          -> &'static FontMetrics {{\n\
          match font {{"
-    ).unwrap();
+    )
+    .unwrap();
     for font in textfonts.iter().chain(["Symbol", "ZapfDingbats"].iter()) {
         writeln!(
             f,
             "BuiltinFont::{} => &METRICS_{},",
             font,
             font.to_uppercase(),
-        ).unwrap();
+        )
+        .unwrap();
     }
     writeln!(
         f,
         "}}\n\
          }}\n\
          lazy_static! {{",
-    ).unwrap();
+    )
+    .unwrap();
     for font in textfonts.iter() {
         write_cond(f, font, &WIN_ANSI_ENCODING).unwrap();
     }

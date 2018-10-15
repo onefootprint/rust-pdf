@@ -253,7 +253,8 @@ impl Pdf {
                 width = width,
                 height = height,
                 c_oid = content_oid,
-            ).map(|_| page_oid)
+            )
+            .map(|_| page_oid)
         })
     }
 
@@ -411,7 +412,8 @@ impl Pdf {
                     parent_id,
                     if is_first { None } else { Some(object_id - 1) },
                     if is_last { None } else { Some(object_id + 1) },
-                ).and(Ok(object_id))
+                )
+                .and(Ok(object_id))
             })?;
             if is_first {
                 first_id = id;
