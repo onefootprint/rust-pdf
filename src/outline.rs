@@ -35,9 +35,9 @@ impl OutlineItem {
         prev: Option<usize>,
         next: Option<usize>,
     ) -> io::Result<()> {
-        output.write_all(b"<< /Title (")?;
+        write!(output, "<< /Title (")?;
         output.write_all(&WIN_ANSI_ENCODING.encode_string(&self.title))?;
-        output.write_all(b")\n")?;
+        writeln!(output, ")")?;
         writeln!(output, "/Parent {} 0 R", parent_id)?;
         if let Some(id) = prev {
             writeln!(output, "/Prev {} 0 R", id)?;

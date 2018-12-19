@@ -24,20 +24,20 @@ pub struct FontRef {
     metrics: Arc<FontMetrics>,
 }
 
-// Hidden from user code by not beeing a constructor method of FontRef.
-pub fn create_font_ref(
-    n: usize,
-    encoding: Encoding,
-    metrics: Arc<FontMetrics>,
-) -> FontRef {
-    FontRef {
-        n,
-        encoding,
-        metrics,
-    }
-}
-
 impl FontRef {
+    // Hidden from user code by not beeing a constructor method of FontRef.
+    pub(crate) fn new(
+        n: usize,
+        encoding: Encoding,
+        metrics: Arc<FontMetrics>,
+    ) -> Self {
+        FontRef {
+            n,
+            encoding,
+            metrics,
+        }
+    }
+    
     /// Get the encoding used by the referenced font.
     pub fn get_encoding(&self) -> &Encoding {
         &self.encoding

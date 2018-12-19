@@ -156,37 +156,40 @@ impl Mul for Matrix {
     }
 }
 
-#[test]
-fn test_matrix_mul_a() {
-    assert_unit(Matrix::rotate_deg(45.) * Matrix::rotate_deg(-45.));
-}
-#[test]
-fn test_matrix_mul_b() {
-    assert_unit(Matrix::uniform_scale(2.) * Matrix::uniform_scale(0.5));
-}
-#[test]
-fn test_matrix_mul_c() {
-    assert_unit(Matrix::rotate(2. * PI));
-}
-#[test]
-fn test_matrix_mul_d() {
-    assert_unit(Matrix::rotate(PI) * Matrix::uniform_scale(-1.));
-}
-
-#[allow(dead_code)]
-fn assert_unit(m: Matrix) {
-    assert_eq!(None, diff(&[1., 0., 0., 1., 0., 0.], &m.v));
-}
-
-#[allow(dead_code)]
-fn diff(a: &[f32; 6], b: &[f32; 6]) -> Option<String> {
-    let large_a = a.iter().fold(0f32, |x, &y| x.max(y));
-    let large_b = b.iter().fold(0f32, |x, &y| x.max(y));
-    let epsilon = 1e-6 * large_a.max(large_b);
-    for i in 0..6 {
-        if (a[i] - b[i]).abs() > epsilon {
-            return Some(format!("{:?} != {:?}", a, b));
-        }
+#[cfg(test)]
+mod tests {
+    use super::Matrix;
+    use std::f32::consts::PI;
+    #[test]
+    fn test_matrix_mul_a() {
+        assert_unit(Matrix::rotate_deg(45.) * Matrix::rotate_deg(-45.));
     }
-    None
+    #[test]
+    fn test_matrix_mul_b() {
+        assert_unit(Matrix::uniform_scale(2.) * Matrix::uniform_scale(0.5));
+    }
+    #[test]
+    fn test_matrix_mul_c() {
+        assert_unit(Matrix::rotate(2. * PI));
+    }
+    #[test]
+    fn test_matrix_mul_d() {
+        assert_unit(Matrix::rotate(PI) * Matrix::uniform_scale(-1.));
+    }
+
+    fn assert_unit(m: Matrix) {
+        assert_eq!(None, diff(&[1., 0., 0., 1., 0., 0.], &m.v));
+    }
+
+    fn diff(a: &[f32; 6], b: &[f32; 6]) -> Option<String> {
+        let large_a = a.iter().fold(0f32, |x, &y| x.max(y));
+        let large_b = b.iter().fold(0f32, |x, &y| x.max(y));
+        let epsilon = 1e-6 * large_a.max(large_b);
+        for i in 0..6 {
+            if (a[i] - b[i]).abs() > epsilon {
+                return Some(format!("{:?} != {:?}", a, b));
+            }
+        }
+        None
+    }
 }

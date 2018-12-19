@@ -116,7 +116,7 @@ impl Pdf {
             // Object ID 0 is special in PDF.
             // We reserve IDs 1 and 2 for the catalog and page tree.
             object_offsets: vec![-1, -1, -1],
-            page_objects_ids: vec![],
+            page_objects_ids: Vec::new(),
             all_font_object_ids: HashMap::new(),
             outline_items: Vec::new(),
             document_info: BTreeMap::new(),
@@ -177,7 +177,6 @@ impl Pdf {
     {
         let (contents_object_id, content_length, fonts, outline_items) = self
             .write_new_object(move |contents_object_id, pdf| {
-                use canvas::create_canvas;
                 // Guess the ID of the next object. (We’ll assert it below.)
                 writeln!(
                     pdf.output,
@@ -190,7 +189,7 @@ impl Pdf {
                 writeln!(pdf.output, "/DeviceRGB cs /DeviceRGB CS")?;
                 let mut fonts = HashMap::new();
                 let mut outline_items: Vec<OutlineItem> = Vec::new();
-                render_contents(&mut create_canvas(
+                render_contents(&mut Canvas::new(
                     &mut pdf.output,
                     &mut fonts,
                     &mut outline_items,
@@ -206,13 +205,13 @@ impl Pdf {
         })?;
 
         let mut font_oids = NamedRefs::new();
-        for (src, r) in &fonts {
+        for (src, r) in fonts {
             if let Some(&object_id) = self.all_font_object_ids.get(&src) {
-                font_oids.insert(r.clone(), object_id);
+                font_oids.insert(r, object_id);
             } else {
                 let object_id = src.write_object(self)?;
-                font_oids.insert(r.clone(), object_id);
-                self.all_font_object_ids.insert(*src, object_id);
+                font_oids.insert(r, object_id);
+                self.all_font_object_ids.insert(src, object_id);
             }
         }
         let page_oid = self.write_page_dict(
@@ -223,8 +222,7 @@ impl Pdf {
         )?;
         // Take the outline_items from this page, mark them with the page ref,
         // and save them for the document outline.
-        for i in &outline_items {
-            let mut item = i.clone();
+        for mut item in outline_items {
             item.set_page(page_oid);
             self.outline_items.push(item);
         }
@@ -304,19 +302,17 @@ impl Pdf {
     /// the xref list, the trailer object and the startxref position.
     pub fn finish(mut self) -> io::Result<()> {
         self.write_object_with_id(PAGES_OBJECT_ID, |pdf| {
-            writeln!(
+            write!(
                 pdf.output,
                 "<< /Type /Pages\n   \
-                 /Count {c}\n   \
-                 /Kids [ {pages}]\n\
-                 >>",
-                c = pdf.page_objects_ids.len(),
-                pages = pdf
-                    .page_objects_ids
-                    .iter()
-                    .map(|id| format!("{} 0 R ", id))
-                    .collect::<String>(),
-            )
+                 /Count {}\n   ",
+                pdf.page_objects_ids.len()
+            )?;
+            write!(pdf.output, "/Kids [ ")?;
+            for id in &pdf.page_objects_ids {
+                write!(pdf.output, "{} 0 R ", id)?;
+            }
+            writeln!(pdf.output, "]\n>>")
         })?;
         let document_info_id = if !self.document_info.is_empty() {
             let info = self.document_info.clone();
@@ -354,8 +350,7 @@ impl Pdf {
             if let Some(outlines_id) = outlines_id {
                 writeln!(pdf.output, "/Outlines {} 0 R", outlines_id)?;
             }
-            writeln!(pdf.output, ">>")?;
-            Ok(())
+            writeln!(pdf.output, ">>")
         })?;
         let startxref = self.tell()?;
         writeln!(
@@ -389,8 +384,7 @@ impl Pdf {
              {}\n\
              %%EOF",
             startxref,
-        )?;
-        Ok(())
+        )
     }
 
     fn write_outlines(&mut self) -> io::Result<Option<usize>> {

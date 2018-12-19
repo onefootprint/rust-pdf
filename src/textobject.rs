@@ -38,15 +38,15 @@ pub struct TextObject<'a> {
     encoding: Encoding,
 }
 
-// Should not be called by user code.
-pub fn create_text_object(output: &mut Write) -> TextObject {
-    TextObject {
-        output,
-        encoding: WIN_ANSI_ENCODING.clone(),
-    }
-}
-
 impl<'a> TextObject<'a> {
+    // Should not be called by user code.
+    pub(crate) fn new(output: &'a mut Write) -> Self {
+        TextObject {
+            output,
+            encoding: WIN_ANSI_ENCODING.clone(),
+        }
+    }
+    
     /// Set the font and font-size to be used by the following text
     /// operations.
     pub fn set_font(&mut self, font: &FontRef, size: f32) -> io::Result<()> {
