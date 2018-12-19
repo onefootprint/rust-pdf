@@ -33,8 +33,7 @@ fn write_cond(f: &mut File, name: &str, encoding: &Encoding) -> Result<()> {
             }
         }
     }
-    writeln!(f, "]);")?;
-    Ok(())
+    writeln!(f, "]);")
 }
 
 fn main() {
@@ -78,7 +77,7 @@ fn main() {
          lazy_static! {{",
     )
     .unwrap();
-    for font in textfonts.iter() {
+    for font in &textfonts {
         write_cond(f, font, &WIN_ANSI_ENCODING).unwrap();
     }
     write_cond(f, "Symbol", &SYMBOL_ENCODING).unwrap();

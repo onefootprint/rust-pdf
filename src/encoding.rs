@@ -46,10 +46,7 @@ impl Encoding {
     /// assert_eq!(None,      enc.get_code("☺"));
     /// ````
     pub fn get_code(&self, name: &str) -> Option<u8> {
-        match self.name_to_code.get(name) {
-            Some(&code) => Some(code),
-            None => None,
-        }
+        self.name_to_code.get(name).cloned()
     }
 
     /// Get the encoded code point from a (unicode) character.
@@ -88,7 +85,12 @@ impl Encoding {
     ///            symb_enc.encode_string("α ∈ ℜ"));
     /// ````
     pub fn encode_string(&self, text: &str) -> Vec<u8> {
-        let mut result = Vec::new();
+        let size = text.len()
+            + text
+                .chars()
+                .filter(|&c| c == '\\' || c == '(' || c == ')')
+                .count();
+        let mut result = Vec::with_capacity(size);
         for ch in text.chars() {
             match self.encode_char(ch) {
                 Some(b'\\') => {
@@ -110,11 +112,9 @@ impl Encoding {
         result
     }
 
-    fn init_block(&mut self, start: u8, data: Vec<&'static str>) {
-        let mut i = start - 1;
-        for name in data {
-            i += 1;
-            self.name_to_code.insert(name, i);
+    fn init_block(&mut self, start: u8, data: &[&'static str]) {
+        for (i, name) in data.iter().enumerate() {
+            self.name_to_code.insert(name, start + (i as u8));
         }
     }
 }
@@ -159,78 +159,78 @@ lazy_static! {
             name_to_code: BTreeMap::new(),
             unicode_to_code: codes
         };
-        result.init_block(0o40, vec!(
+        result.init_block(0o40, &[
             "space", "exclam", "quotedbl", "numbersign",
-            "dollar", "percent", "ampersand", "quotesingle"));
-        result.init_block(0o50, vec!(
+            "dollar", "percent", "ampersand", "quotesingle"]);
+        result.init_block(0o50, &[
             "parenleft", "parenright", "asterisk", "plus",
-            "comma", "hyphen", "period", "slash"));
-        result.init_block(0o60, vec!(
-            "zero", "one", "two", "three", "four", "five", "six", "seven"));
-        result.init_block(0o70, vec!(
+            "comma", "hyphen", "period", "slash"]);
+        result.init_block(0o60, &[
+            "zero", "one", "two", "three", "four", "five", "six", "seven"]);
+        result.init_block(0o70, &[
             "eight", "nine", "colon", "semicolon",
-            "less", "equal", "greater", "question"));
-        result.init_block(0o100, vec!(
+            "less", "equal", "greater", "question"]);
+        result.init_block(0o100, &[
             "at", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J",
             "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V",
-            "W", "X", "Y", "Z"));
-        result.init_block(0o133, vec!(
+            "W", "X", "Y", "Z"]);
+        result.init_block(0o133, &[
             "bracketleft",
-            "backslash", "bracketright", "asciicircum", "underscore"));
-        result.init_block(0o140, vec!(
+            "backslash", "bracketright", "asciicircum", "underscore"]);
+        result.init_block(0o140, &[
             "grave", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j",
             "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v",
-            "w", "x", "y", "z"));
-        result.init_block(0o173, vec!(
-            "braceleft", "bar", "braceright", "asciitilde"));
-        result.init_block(0o200, vec!(
+            "w", "x", "y", "z"]);
+        result.init_block(0o173, &[
+            "braceleft", "bar", "braceright", "asciitilde"]);
+        result.init_block(0o200, &[
             "Euro", "..1", "quotesinglbase", "florin",
-            "quotedblbase", "ellipsis", "dagger", "daggerdbl"));
-        result.init_block(0o210, vec!(
+            "quotedblbase", "ellipsis", "dagger", "daggerdbl"]);
+        result.init_block(0o210, &[
             "circumflex", "perthousand", "Scaron", "guilsinglleft",
-            "OE", "..5", "Zcaron", "..7"));
-        result.init_block(0o220, vec!(
+            "OE", "..5", "Zcaron", "..7"]);
+        result.init_block(0o220, &[
             "..0", "quoteleft", "quoteright", "quotedblleft",
-            "quotedblright", "bullet", "endash", "emdash"));
-        result.init_block(0o230, vec!(
+            "quotedblright", "bullet", "endash", "emdash"]);
+        result.init_block(0o230, &[
             "tilde", "trademark", "scaron", "guilsinglright",
-            "oe", "..5", "zcaron", "Ydieresis"));
-        result.init_block(0o240, vec!(
+            "oe", "..5", "zcaron", "Ydieresis"]);
+        result.init_block(0o240, &[
             "..0", "exclamdown", "cent", "sterling",
-            "currency", "yen", "brokenbar", "section"));
-        result.init_block(0o250, vec!(
+            "currency", "yen", "brokenbar", "section"]);
+        result.init_block(0o250, &[
             "dieresis", "copyright", "ordfeminine", "guillemotleft",
-            "logicalnot", "..5", "registered", "macron"));
-        result.init_block(0o260, vec!(
+            "logicalnot", "..5", "registered", "macron"]);
+        result.init_block(0o260, &[
             "degree", "plusminus", "twosuperior", "threesuperior",
-            "acute", "mu", "paragraph", "periodcentered"));
-        result.init_block(0o270, vec!(
+            "acute", "mu", "paragraph", "periodcentered"]);
+        result.init_block(0o270, &[
             "cedilla", "onesuperior", "ordmasculine", "guillemotright",
-            "onequarter", "onehalf", "threequarters", "questiondown"));
-        result.init_block(0o300, vec!(
+            "onequarter", "onehalf", "threequarters", "questiondown"]);
+        result.init_block(0o300, &[
             "Agrave", "Aacute", "Acircumflex", "Atilde",
-            "Adieresis", "Aring", "AE", "Ccedilla"));
-        result.init_block(0o310, vec!(
+            "Adieresis", "Aring", "AE", "Ccedilla"]);
+        result.init_block(0o310, &[
             "Egrave", "Eacute", "Ecircumflex", "Edieresis",
-            "Igrave", "Iacute", "Icircumflex", "Idieresis"));
-        result.init_block(0o320, vec!(
+            "Igrave", "Iacute", "Icircumflex", "Idieresis"]);
+        result.init_block(0o320, &[
             "Eth", "Ntilde", "Ograve", "Oacute",
-            "Ocircumflex", "Otilde", "Odieresis", "multiply"));
-        result.init_block(0o330, vec!(
+            "Ocircumflex", "Otilde", "Odieresis", "multiply"]);
+        result.init_block(0o330, &[
             "Oslash", "Ugrave", "Uacute", "Ucircumflex",
-            "Udieresis", "Yacute", "Thorn", "germandbls"));
-        result.init_block(0o340, vec!(
+            "Udieresis", "Yacute", "Thorn", "germandbls"]);
+        result.init_block(0o340, &[
             "agrave", "aacute", "acircumflex", "atilde",
-            "adieresis", "aring", "ae", "ccedilla"));
-        result.init_block(0o350, vec!(
+            "adieresis", "aring", "ae", "ccedilla"]);
+        result.init_block(0o350, &[
             "egrave", "eacute", "ecircumflex", "edieresis",
-            "igrave", "iacute", "icircumflex", "idieresis"));
-        result.init_block(0o360, vec!(
+            "igrave", "iacute", "icircumflex", "idieresis"]);
+        result.init_block(0o360, &[
             "eth", "ntilde", "ograve", "oacute",
-            "ocircumflex", "otilde", "odieresis", "divide"));
-        result.init_block(0o370, vec!(
+            "ocircumflex", "otilde", "odieresis", "divide"]);
+        result.init_block(0o370, &[
             "oslash", "ugrave", "uacute", "ucircumflex",
-            "udieresis", "yacute", "thorn", "ydieresis"));
+            "udieresis", "yacute", "thorn", "ydieresis"]);
         result
     };
 

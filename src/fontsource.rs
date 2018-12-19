@@ -5,7 +5,6 @@ use fontmetrics::{get_builtin_metrics, FontMetrics};
 use std::cmp::Eq;
 use std::hash::Hash;
 use std::io::{self, Write};
-use std::ops::Add;
 use Pdf;
 
 /// The "Base14" built-in fonts in PDF.
@@ -117,11 +116,12 @@ impl FontSource for BuiltinFont {
 
     fn get_width_raw(&self, text: &str) -> u32 {
         let metrics = self.get_metrics();
-        self.get_encoding()
-            .encode_string(text)
-            .iter()
-            .map(|&ch| u32::from(metrics.get_width(ch).unwrap_or(100)))
-            .fold(0, Add::add)
+        self.get_encoding().encode_string(text).iter().fold(
+            0,
+            |result, &ch| {
+                result + u32::from(metrics.get_width(ch).unwrap_or(100))
+            },
+        )
     }
 
     fn get_metrics(&self) -> FontMetrics {

@@ -53,16 +53,15 @@ impl FontRef {
     /// This unit is what is used in some places internally in pdf files
     /// and in some methods on a [TextObject](struct.TextObject.html).
     pub fn get_width_raw(&self, text: &str) -> u32 {
-        let mut result = 0;
-        for char in text.chars() {
-            result += u32::from(
-                self.encoding
-                    .encode_char(char)
-                    .and_then(|ch| self.metrics.get_width(ch))
-                    .unwrap_or(100),
-            );
-        }
-        result
+        text.chars().fold(0, |result, char| {
+            result
+                + u32::from(
+                    self.encoding
+                        .encode_char(char)
+                        .and_then(|ch| self.metrics.get_width(ch))
+                        .unwrap_or(100),
+                )
+        })
     }
 }
 

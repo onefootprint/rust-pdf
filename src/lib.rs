@@ -140,7 +140,7 @@ impl Pdf {
     /// Set metadata: keywords associated with the document.
     pub fn set_keywords(&mut self, keywords: &str) {
         self.document_info
-            .insert("Subject".to_string(), keywords.to_string());
+            .insert("Keywords".to_string(), keywords.to_string());
     }
     /// Set metadata: If the document was converted to PDF from another
     /// format, the name of the conforming product that created the original

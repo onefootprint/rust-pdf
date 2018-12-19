@@ -115,10 +115,9 @@ impl<'a> TextObject<'a> {
     }
     /// Show a text.
     pub fn show(&mut self, text: &str) -> io::Result<()> {
-        self.output.write_all(b"(")?;
+        write!(self.output, "(")?;
         self.output.write_all(&self.encoding.encode_string(text))?;
-        self.output.write_all(b") Tj\n")?;
-        Ok(())
+        writeln!(self.output, ") Tj")
     }
 
     /// Show one or more text strings, allowing individual glyph positioning.
@@ -144,9 +143,9 @@ impl<'a> TextObject<'a> {
     /// # document.finish().unwrap();
     /// ```
     pub fn show_adjusted(&mut self, param: &[(&str, i32)]) -> io::Result<()> {
-        self.output.write_all(b"[")?;
+        write!(self.output, "[")?;
         for &(text, offset) in param {
-            self.output.write_all(b"(")?;
+            write!(self.output, "(")?;
             self.output.write_all(&self.encoding.encode_string(text))?;
             write!(self.output, ") {} ", offset)?
         }
@@ -154,10 +153,9 @@ impl<'a> TextObject<'a> {
     }
     /// Show a text as a line.  See also [set_leading](#method.set_leading).
     pub fn show_line(&mut self, text: &str) -> io::Result<()> {
-        self.output.write_all(b"(")?;
+        write!(self.output, "(")?;
         self.output.write_all(&self.encoding.encode_string(text))?;
-        self.output.write_all(b") '\n")?;
-        Ok(())
+        writeln!(self.output, ") '")
     }
     /// Push the graphics state on a stack.
     pub fn gsave(&mut self) -> io::Result<()> {
