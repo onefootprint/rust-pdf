@@ -202,7 +202,7 @@ impl Pdf {
             writeln!(pdf.output, "{}", content_length)
         })?;
 
-        let mut font_oids = NamedRefs::new();
+        let mut font_oids = NamedRefs::new(fonts.len());
         for (src, r) in fonts {
             if let Some(&object_id) = self.all_font_object_ids.get(&src) {
                 font_oids.insert(r, object_id);
@@ -436,9 +436,9 @@ struct NamedRefs {
 }
 
 impl NamedRefs {
-    fn new() -> Self {
+    fn new(capacity: usize) -> Self {
         NamedRefs {
-            oids: HashMap::new(),
+            oids: HashMap::with_capacity(capacity),
         }
     }
     fn insert(&mut self, name: FontRef, oid: usize) -> Option<usize> {
