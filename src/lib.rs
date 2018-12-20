@@ -106,9 +106,7 @@ impl Pdf {
     }
 
     /// Create a new PDF document, writing to `output`.
-    pub fn new(output: File) -> io::Result<Pdf> {
-        let mut output = output; // Strange but needed
-
+    pub fn new(mut output: File) -> io::Result<Pdf> {
         // TODO Maybe use a lower version?  Possibly decide by features used?
         output.write_all(b"%PDF-1.7\n%\xB5\xED\xAE\xFB\n")?;
         Ok(Pdf {
@@ -188,7 +186,7 @@ impl Pdf {
                 let start = pdf.tell()?;
                 writeln!(pdf.output, "/DeviceRGB cs /DeviceRGB CS")?;
                 let mut fonts = HashMap::new();
-                let mut outline_items: Vec<OutlineItem> = Vec::new();
+                let mut outline_items = Vec::new();
                 render_contents(&mut Canvas::new(
                     &mut pdf.output,
                     &mut fonts,

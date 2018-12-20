@@ -46,7 +46,7 @@ impl<'a> TextObject<'a> {
             encoding: WIN_ANSI_ENCODING.clone(),
         }
     }
-    
+
     /// Set the font and font-size to be used by the following text
     /// operations.
     pub fn set_font(&mut self, font: &FontRef, size: f32) -> io::Result<()> {

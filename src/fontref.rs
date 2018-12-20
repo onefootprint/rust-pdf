@@ -37,7 +37,7 @@ impl FontRef {
             metrics,
         }
     }
-    
+
     /// Get the encoding used by the referenced font.
     pub fn get_encoding(&self) -> &Encoding {
         &self.encoding

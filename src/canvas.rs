@@ -33,7 +33,7 @@ impl<'a> Canvas<'a> {
             outline_items,
         }
     }
-    
+
     /// Append a closed rectangle with a corner at (x, y) and
     /// extending width × height to the to the current path.
     pub fn rectangle(
