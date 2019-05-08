@@ -15,8 +15,8 @@ readme = "README.md"
 build = "src/build_metrics.rs"
 
 [build-dependencies]
-lazy_static = "0.2"
+lazy_static = "1.3"
 
 [dependencies]
-lazy_static = "0.2"
+lazy_static = "1.3"
 time = "0.1"
