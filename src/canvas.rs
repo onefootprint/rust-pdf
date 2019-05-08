@@ -152,7 +152,7 @@ impl<'a> Canvas<'a> {
         let bottom = y + r;
         let left = x - r;
         let right = x + r;
-        #[cfg_attr(feature = "cargo-clippy", allow(excessive_precision))]
+        #[allow(clippy::excessive_precision)]
         let c = 0.551_915_024_494;
         let dist = r * c;
         let up = y - dist;
