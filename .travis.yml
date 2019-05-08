@@ -4,18 +4,17 @@ before_script:
 - cargo update || true
 rust:
   - stable
+  - 1.33.0
+  - 1.32.0
+  - 1.31.1
   - beta
   - nightly
-  - 1.26.2
-  - 1.24.1
+
 matrix:
   include:
-   - rust: nightly
-     env: TASK=rustfmt
-     before_script:
-      - rustup component add rustfmt-preview
-     script:
-      - cargo fmt -- --check
+    - rust: stable
+      env: TASK=rustfmt
+      before_script: rustup component add rustfmt
+      script: cargo fmt -- --check
   allow_failures:
     - rust: nightly
-      env:
