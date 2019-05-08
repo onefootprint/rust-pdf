@@ -20,20 +20,20 @@ pub struct Canvas<'a> {
     outline_items: &'a mut Vec<OutlineItem>,
 }
 
-// Should not be called by user code.
-pub fn create_canvas<'a>(
-    output: &'a mut Write,
-    fonts: &'a mut HashMap<BuiltinFont, FontRef>,
-    outline_items: &'a mut Vec<OutlineItem>,
-) -> Canvas<'a> {
-    Canvas {
-        output,
-        fonts,
-        outline_items,
-    }
-}
-
 impl<'a> Canvas<'a> {
+    // Should not be called by user code.
+    pub(crate) fn new(
+        output: &'a mut Write,
+        fonts: &'a mut HashMap<BuiltinFont, FontRef>,
+        outline_items: &'a mut Vec<OutlineItem>,
+    ) -> Self {
+        Canvas {
+            output,
+            fonts,
+            outline_items,
+        }
+    }
+
     /// Append a closed rectangle with a corner at (x, y) and
     /// extending width × height to the to the current path.
     pub fn rectangle(
@@ -163,8 +163,7 @@ impl<'a> Canvas<'a> {
         self.curve_to(leftp, top, left, up, left, y)?;
         self.curve_to(left, down, leftp, bottom, x, bottom)?;
         self.curve_to(rightp, bottom, right, down, right, y)?;
-        self.curve_to(right, up, rightp, top, x, top)?;
-        Ok(())
+        self.curve_to(right, up, rightp, top, x, top)
     }
     /// Stroke the current path.
     pub fn stroke(&mut self) -> io::Result<()> {
@@ -180,12 +179,11 @@ impl<'a> Canvas<'a> {
     }
     /// Get a FontRef for a specific font.
     pub fn get_font(&mut self, font: BuiltinFont) -> FontRef {
-        use fontref::create_font_ref;
         let next_n = self.fonts.len();
         self.fonts
             .entry(font)
             .or_insert_with(|| {
-                create_font_ref(
+                FontRef::new(
                     next_n,
                     font.get_encoding().clone(),
                     Arc::new(font.get_metrics()),
@@ -204,9 +202,8 @@ impl<'a> Canvas<'a> {
     where
         F: FnOnce(&mut TextObject) -> io::Result<T>,
     {
-        use textobject::create_text_object;
         writeln!(self.output, "BT")?;
-        let result = render_text(&mut create_text_object(self.output))?;
+        let result = render_text(&mut TextObject::new(self.output))?;
         writeln!(self.output, "ET")?;
         Ok(result)
     }

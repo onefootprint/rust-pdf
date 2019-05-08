@@ -24,20 +24,20 @@ pub struct FontRef {
     metrics: Arc<FontMetrics>,
 }
 
-// Hidden from user code by not beeing a constructor method of FontRef.
-pub fn create_font_ref(
-    n: usize,
-    encoding: Encoding,
-    metrics: Arc<FontMetrics>,
-) -> FontRef {
-    FontRef {
-        n,
-        encoding,
-        metrics,
-    }
-}
-
 impl FontRef {
+    // Hidden from user code by not beeing a constructor method of FontRef.
+    pub(crate) fn new(
+        n: usize,
+        encoding: Encoding,
+        metrics: Arc<FontMetrics>,
+    ) -> Self {
+        FontRef {
+            n,
+            encoding,
+            metrics,
+        }
+    }
+
     /// Get the encoding used by the referenced font.
     pub fn get_encoding(&self) -> &Encoding {
         &self.encoding
@@ -53,16 +53,15 @@ impl FontRef {
     /// This unit is what is used in some places internally in pdf files
     /// and in some methods on a [TextObject](struct.TextObject.html).
     pub fn get_width_raw(&self, text: &str) -> u32 {
-        let mut result = 0;
-        for char in text.chars() {
-            result += u32::from(
-                self.encoding
-                    .encode_char(char)
-                    .and_then(|ch| self.metrics.get_width(ch))
-                    .unwrap_or(100),
-            );
-        }
-        result
+        text.chars().fold(0, |result, char| {
+            result
+                + u32::from(
+                    self.encoding
+                        .encode_char(char)
+                        .and_then(|ch| self.metrics.get_width(ch))
+                        .unwrap_or(100),
+                )
+        })
     }
 }
 

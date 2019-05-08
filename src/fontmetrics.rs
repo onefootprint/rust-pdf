@@ -43,10 +43,7 @@ impl FontMetrics {
     /// Get the width of a specific character.
     /// The character is given in the encoding of the FontMetrics object.
     pub fn get_width(&self, char: u8) -> Option<u16> {
-        match self.widths.get(&char) {
-            Some(&w) => Some(w),
-            None => None,
-        }
+        self.widths.get(&char).cloned()
     }
 }
 
