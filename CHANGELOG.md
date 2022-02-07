@@ -7,7 +7,9 @@ The format is based on
 project tries to adhere to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## Release 0.7.0
+
+2022-02-07 21:14:40 +02:00
 
 * Merge PR #7 from @hummingly:
   - Updates dependencies.
