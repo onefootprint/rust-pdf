@@ -8,7 +8,8 @@ description = """
 Generate PDF files in pure Rust.
 Currently, simple vector graphics and text set in the 14 built-in \
 fonts are supported."""
-keywords = ["pdf"]
+categories = ["graphics"]
+keywords = ["pdf", "Portable Document Format", "graphics", "vector", "text"]
 documentation = "https://docs.rs/pdf-canvas"
 repository = "https://github.com/kaj/rust-pdf"
 readme = "README.md"
@@ -22,3 +23,6 @@ lazy_static = "1.3"
 [dependencies]
 lazy_static = "1.3"
 chrono = "0.4.19"
+
+[badges.maintenance]
+status = "passively-maintained"
