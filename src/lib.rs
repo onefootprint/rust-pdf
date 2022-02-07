@@ -49,8 +49,7 @@
 #[macro_use]
 extern crate lazy_static;
 
-extern crate time;
-
+use chrono::offset::Local;
 use std::collections::{BTreeMap, HashMap};
 use std::fmt;
 use std::fs::File;
@@ -319,16 +318,13 @@ impl Pdf {
                 for (key, value) in info {
                     writeln!(pdf.output, " /{} ({})", key, value)?;
                 }
-                if let Ok(now) =
-                    time::strftime("%Y%m%d%H%M%S%z", &time::now())
-                {
-                    write!(
-                        pdf.output,
-                        " /CreationDate (D:{now})\n \
-                         /ModDate (D:{now})",
-                        now = now,
-                    )?;
-                }
+                let now = Local::now().format("%Y%m%d%H%M%S%z").to_string();
+                write!(
+                    pdf.output,
+                    " /CreationDate (D:{now})\n \
+                     /ModDate (D:{now})",
+                    now = now,
+                )?;
                 writeln!(pdf.output, ">>")?;
                 Ok(Some(page_object_id))
             })?
