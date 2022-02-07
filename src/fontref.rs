@@ -1,5 +1,5 @@
-use encoding::Encoding;
-use fontmetrics::FontMetrics;
+use crate::encoding::Encoding;
+use crate::fontmetrics::FontMetrics;
 use std::fmt;
 use std::sync::Arc;
 

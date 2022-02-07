@@ -1,6 +1,6 @@
-use encoding::{Encoding, WIN_ANSI_ENCODING};
-use fontref::FontRef;
-use graphicsstate::Color;
+use crate::encoding::{Encoding, WIN_ANSI_ENCODING};
+use crate::fontref::FontRef;
+use crate::graphicsstate::Color;
 use std::io::{self, Write};
 
 /// A text object is where text is put on the canvas.
@@ -34,13 +34,13 @@ use std::io::{self, Write};
 /// # document.finish().unwrap();
 /// ```
 pub struct TextObject<'a> {
-    output: &'a mut Write,
+    output: &'a mut dyn Write,
     encoding: Encoding,
 }
 
 impl<'a> TextObject<'a> {
     // Should not be called by user code.
-    pub(crate) fn new(output: &'a mut Write) -> Self {
+    pub(crate) fn new(output: &'a mut dyn Write) -> Self {
         TextObject {
             output,
             encoding: WIN_ANSI_ENCODING.clone(),

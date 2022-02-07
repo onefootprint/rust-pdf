@@ -1,11 +1,11 @@
-use encoding::{
+use crate::encoding::{
     Encoding, SYMBOL_ENCODING, WIN_ANSI_ENCODING, ZAPFDINGBATS_ENCODING,
 };
-use fontmetrics::{get_builtin_metrics, FontMetrics};
+use crate::fontmetrics::{get_builtin_metrics, FontMetrics};
 use std::cmp::Eq;
 use std::hash::Hash;
 use std::io::{self, Write};
-use Pdf;
+use crate::Pdf;
 
 /// The "Base14" built-in fonts in PDF.
 /// Underscores in these names are hyphens in the real names.

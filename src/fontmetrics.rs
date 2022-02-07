@@ -1,4 +1,4 @@
-use fontsource::BuiltinFont;
+use crate::fontsource::BuiltinFont;
 use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::{self, BufRead};

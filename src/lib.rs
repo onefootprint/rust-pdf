@@ -57,27 +57,27 @@ use std::fs::File;
 use std::io::{self, Seek, SeekFrom, Write};
 
 mod fontsource;
-pub use fontsource::{BuiltinFont, FontSource};
+pub use crate::fontsource::{BuiltinFont, FontSource};
 
 mod fontref;
-pub use fontref::FontRef;
+pub use crate::fontref::FontRef;
 
 mod fontmetrics;
-pub use fontmetrics::FontMetrics;
+pub use crate::fontmetrics::FontMetrics;
 
 mod encoding;
-pub use encoding::Encoding;
+pub use crate::encoding::Encoding;
 
 pub mod graphicsstate;
 
 mod outline;
-use outline::OutlineItem;
+use crate::outline::OutlineItem;
 
 mod canvas;
-pub use canvas::Canvas;
+pub use crate::canvas::Canvas;
 
 mod textobject;
-pub use textobject::TextObject;
+pub use crate::textobject::TextObject;
 
 /// The top-level object for writing a PDF.
 ///

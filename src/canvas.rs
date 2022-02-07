@@ -1,11 +1,11 @@
-use fontref::FontRef;
-use fontsource::{BuiltinFont, FontSource};
-use graphicsstate::*;
-use outline::OutlineItem;
+use crate::fontref::FontRef;
+use crate::fontsource::{BuiltinFont, FontSource};
+use crate::graphicsstate::*;
+use crate::outline::OutlineItem;
 use std::collections::HashMap;
 use std::io::{self, Write};
 use std::sync::Arc;
-use textobject::TextObject;
+use crate::textobject::TextObject;
 
 /// A visual area where content can be drawn (a page).
 ///
@@ -15,7 +15,7 @@ use textobject::TextObject;
 /// TODO Everything here that takes a `BuiltinFont` should take any
 /// `FontSource` instead.
 pub struct Canvas<'a> {
-    output: &'a mut Write,
+    output: &'a mut dyn Write,
     fonts: &'a mut HashMap<BuiltinFont, FontRef>,
     outline_items: &'a mut Vec<OutlineItem>,
 }
@@ -23,7 +23,7 @@ pub struct Canvas<'a> {
 impl<'a> Canvas<'a> {
     // Should not be called by user code.
     pub(crate) fn new(
-        output: &'a mut Write,
+        output: &'a mut dyn Write,
         fonts: &'a mut HashMap<BuiltinFont, FontRef>,
         outline_items: &'a mut Vec<OutlineItem>,
     ) -> Self {

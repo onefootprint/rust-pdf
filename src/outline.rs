@@ -1,4 +1,4 @@
-pub use encoding::WIN_ANSI_ENCODING;
+pub use crate::encoding::WIN_ANSI_ENCODING;
 use std::io::{self, Write};
 
 /// An item in the document outline.
@@ -30,7 +30,7 @@ impl OutlineItem {
 
     pub fn write_dictionary(
         &self,
-        output: &mut Write,
+        output: &mut dyn Write,
         parent_id: usize,
         prev: Option<usize>,
         next: Option<usize>,

@@ -12,6 +12,7 @@ keywords = ["pdf"]
 documentation = "https://docs.rs/pdf-canvas"
 repository = "https://github.com/kaj/rust-pdf"
 readme = "README.md"
+edition = "2021"
 
 build = "src/build_metrics.rs"
 

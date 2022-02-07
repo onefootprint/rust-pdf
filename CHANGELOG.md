@@ -22,6 +22,7 @@ project tries to adhere to
   - Overall made more use of the standard library.
 * Add keyword "pdf" to crate, PR #6 from @adiba
 * Update `lazy_static` dependency.
+* Update to Rust edition 2021.
 * Update travis build to use more up to date rust versions and stable
   rustfmt.
 * Update clippy directive.
