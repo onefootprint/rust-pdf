@@ -2,10 +2,10 @@ use crate::fontref::FontRef;
 use crate::fontsource::{BuiltinFont, FontSource};
 use crate::graphicsstate::*;
 use crate::outline::OutlineItem;
+use crate::textobject::TextObject;
 use std::collections::HashMap;
 use std::io::{self, Write};
 use std::sync::Arc;
-use crate::textobject::TextObject;
 
 /// A visual area where content can be drawn (a page).
 ///
