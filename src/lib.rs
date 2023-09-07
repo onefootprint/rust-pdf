@@ -53,7 +53,7 @@ use chrono::offset::Local;
 use std::collections::{BTreeMap, HashMap};
 use std::fmt;
 use std::fs::File;
-use std::io::{self, Seek, SeekFrom, Write};
+use std::io::{self, SeekFrom, Write};
 
 mod fontsource;
 pub use crate::fontsource::{BuiltinFont, FontSource};
@@ -85,8 +85,8 @@ pub use crate::textobject::TextObject;
 /// are appended with the `render_page` method.
 /// Don't forget to call `finish` when done, to write the document
 /// trailer, without it the written file won't be a proper PDF.
-pub struct Pdf {
-    output: File,
+pub struct Pdf<F> {
+    output: F,
     object_offsets: Vec<i64>,
     page_objects_ids: Vec<usize>,
     all_font_object_ids: HashMap<BuiltinFont, usize>,
@@ -97,15 +97,15 @@ pub struct Pdf {
 const ROOT_OBJECT_ID: usize = 1;
 const PAGES_OBJECT_ID: usize = 2;
 
-impl Pdf {
+impl Pdf<File> {
     /// Create a new PDF document as a new file with given filename.
-    pub fn create(filename: &str) -> io::Result<Pdf> {
+    pub fn create(filename: &str) -> io::Result<Pdf<File>> {
         let file = File::create(filename)?;
-        Pdf::new(file)
+        Pdf::<File>::new(file)
     }
 
     /// Create a new PDF document, writing to `output`.
-    pub fn new(mut output: File) -> io::Result<Pdf> {
+    pub fn new(mut output: File) -> io::Result<Pdf<File>> {
         // TODO Maybe use a lower version?  Possibly decide by features used?
         output.write_all(b"%PDF-1.7\n%\xB5\xED\xAE\xFB\n")?;
         Ok(Pdf {
@@ -119,6 +119,9 @@ impl Pdf {
             document_info: BTreeMap::new(),
         })
     }
+}
+
+impl<W: std::io::Write + std::io::Read + std::io::Seek> Pdf<W> {
     /// Set metadata: the document's title.
     pub fn set_title(&mut self, title: &str) {
         self.document_info
@@ -255,7 +258,7 @@ impl Pdf {
 
     fn write_new_object<F, T>(&mut self, write_content: F) -> io::Result<T>
     where
-        F: FnOnce(usize, &mut Pdf) -> io::Result<T>,
+        F: FnOnce(usize, &mut Pdf<W>) -> io::Result<T>,
     {
         let id = self.object_offsets.len();
         let (result, offset) =
@@ -270,7 +273,7 @@ impl Pdf {
         write_content: F,
     ) -> io::Result<T>
     where
-        F: FnOnce(&mut Pdf) -> io::Result<T>,
+        F: FnOnce(&mut Pdf<W>) -> io::Result<T>,
     {
         assert!(self.object_offsets[id] == -1);
         let (result, offset) = self.write_object(id, write_content)?;
@@ -284,7 +287,7 @@ impl Pdf {
         write_content: F,
     ) -> io::Result<(T, i64)>
     where
-        F: FnOnce(&mut Pdf) -> io::Result<T>,
+        F: FnOnce(&mut Pdf<W>) -> io::Result<T>,
     {
         // `as i64` here would overflow for PDF files bigger than 2**63 bytes
         let offset = self.tell()? as i64;
