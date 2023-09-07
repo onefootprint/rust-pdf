@@ -53,7 +53,7 @@ use chrono::offset::Local;
 use std::collections::{BTreeMap, HashMap};
 use std::fmt;
 use std::fs::File;
-use std::io::{self, SeekFrom, Write};
+use std::io::{self, Cursor, SeekFrom, Write};
 
 mod fontsource;
 pub use crate::fontsource::{BuiltinFont, FontSource};
@@ -106,6 +106,26 @@ impl Pdf<File> {
 
     /// Create a new PDF document, writing to `output`.
     pub fn new(mut output: File) -> io::Result<Pdf<File>> {
+        // TODO Maybe use a lower version?  Possibly decide by features used?
+        output.write_all(b"%PDF-1.7\n%\xB5\xED\xAE\xFB\n")?;
+        Ok(Pdf {
+            output,
+            // Object ID 0 is special in PDF.
+            // We reserve IDs 1 and 2 for the catalog and page tree.
+            object_offsets: vec![-1, -1, -1],
+            page_objects_ids: Vec::new(),
+            all_font_object_ids: HashMap::new(),
+            outline_items: Vec::new(),
+            document_info: BTreeMap::new(),
+        })
+    }
+}
+
+impl Pdf<std::io::Cursor<Vec<u8>>> {
+    /// Create a new PDF document as a buffer
+    pub fn create_with_buffer() -> io::Result<Self> {
+        let mut output = Cursor::new(Vec::new());
+
         // TODO Maybe use a lower version?  Possibly decide by features used?
         output.write_all(b"%PDF-1.7\n%\xB5\xED\xAE\xFB\n")?;
         Ok(Pdf {
