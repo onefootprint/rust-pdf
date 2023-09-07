@@ -139,6 +139,11 @@ impl Pdf<std::io::Cursor<Vec<u8>>> {
             document_info: BTreeMap::new(),
         })
     }
+
+    /// Export the PDF as raw bytes
+    pub fn to_vec(self) -> Vec<u8> {
+        self.output.into_inner()
+    }
 }
 
 impl<W: std::io::Write + std::io::Read + std::io::Seek> Pdf<W> {
@@ -320,7 +325,7 @@ impl<W: std::io::Write + std::io::Read + std::io::Seek> Pdf<W> {
     /// Write out the document trailer.
     /// The trailer consists of the pages object, the root object,
     /// the xref list, the trailer object and the startxref position.
-    pub fn finish(mut self) -> io::Result<()> {
+    pub fn finish(mut self) -> io::Result<W> {
         self.write_object_with_id(PAGES_OBJECT_ID, |pdf| {
             write!(
                 pdf.output,
@@ -401,7 +406,8 @@ impl<W: std::io::Write + std::io::Read + std::io::Seek> Pdf<W> {
              {}\n\
              %%EOF",
             startxref,
-        )
+        )?;
+        Ok(self.output)
     }
 
     fn write_outlines(&mut self) -> io::Result<Option<usize>> {
